@@ -7,3 +7,7 @@ __pycache__/
 data/*.mp4
 data/frames/
 data/datasets/
+runs/
+yolo11n-seg.pt
+data/model_tests/
+data/temporal_analysis/
