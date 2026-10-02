@@ -5,3 +5,4 @@ __pycache__/
 .vscode/
 .idea/
 data/*.mp4
+data/frames/
