@@ -6,3 +6,4 @@ __pycache__/
 .idea/
 data/*.mp4
 data/frames/
+data/datasets/
