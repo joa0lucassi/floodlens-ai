@@ -11,3 +11,6 @@ runs/
 yolo11n-seg.pt
 data/model_tests/
 data/temporal_analysis/
+data/
+models/**/*.pt
+rualivreia.zip
