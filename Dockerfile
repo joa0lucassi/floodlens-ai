@@ -15,6 +15,7 @@ COPY requirements-prod.txt .
 RUN python -m pip install --upgrade pip
 
 RUN python -m pip install \
+    --no-cache-dir \
     torch==2.14.1+cpu \
     torchvision==0.29.1+cpu \
     --index-url https://download.pytorch.org/whl/cpu
@@ -28,13 +29,4 @@ COPY models ./models
 
 EXPOSE 8000
 
-CMD [
-    "python",
-    "-m",
-    "uvicorn",
-    "src.api.main:app",
-    "--host",
-    "0.0.0.0",
-    "--port",
-    "8000"
-]
+CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
