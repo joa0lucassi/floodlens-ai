@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+.git
+.gitignore
+
+data/
+runs/
+docs/
+
+rualivreia.zip
+
+.vscode/
+.idea/
+
+*.csv
+*.log
