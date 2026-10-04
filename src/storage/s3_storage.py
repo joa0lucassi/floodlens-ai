@@ -105,6 +105,36 @@ class S3Storage:
                 f"{error}"
             ) from error
 
+    def upload_file(
+        self,
+        file_path,
+        key,
+        content_type
+    ):
+        if not self.enabled:
+            return None
+
+        try:
+            self.client.upload_file(
+                Filename=str(file_path),
+                Bucket=self.bucket_name,
+                Key=key,
+                ExtraArgs={
+                    "ContentType": content_type
+                }
+            )
+
+            return key
+
+        except (
+            ClientError,
+            BotoCoreError
+        ) as error:
+            raise RuntimeError(
+                f"Failed to upload file to S3: "
+                f"{error}"
+            ) from error
+
     def upload_json(
         self,
         data,

@@ -38,7 +38,7 @@ app = FastAPI(
         "API for urban flood monitoring "
         "using computer vision and AI."
     ),
-    version="0.4.0",
+    version="0.5.0",
 )
 
 
@@ -56,7 +56,7 @@ def root():
     return {
         "name": "FloodLens AI",
         "status": "running",
-        "version": "0.4.0",
+        "version": "0.5.0",
     }
 
 
@@ -255,6 +255,10 @@ def analyze_video(
 
     temp_path = None
 
+    analysis_id = (
+        storage.create_analysis_id()
+    )
+
     try:
         with tempfile.NamedTemporaryFile(
             delete=False,
@@ -277,9 +281,75 @@ def analyze_video(
             )
         )
 
-        return {
+        response = {
+            "analysis_id": analysis_id,
             "filename": original_name,
             **analysis,
+        }
+
+        storage_result = {
+            "enabled": storage.enabled,
+            "saved": False,
+            "bucket": (
+                storage.bucket_name
+                if storage.enabled
+                else None
+            ),
+            "video_key": None,
+            "result_key": None,
+        }
+
+        if storage.enabled:
+            try:
+                video_key = storage.build_key(
+                    category="uploads/videos",
+                    analysis_id=analysis_id,
+                    filename=original_name,
+                )
+
+                result_key = storage.build_key(
+                    category="results/videos",
+                    analysis_id=analysis_id,
+                    filename="analysis.json",
+                )
+
+                storage.upload_file(
+                    file_path=temp_path,
+                    key=video_key,
+                    content_type=(
+                        file.content_type
+                        or "video/mp4"
+                    ),
+                )
+
+                result_document = {
+                    **response,
+                    "storage": {
+                        "video_key": video_key,
+                    },
+                }
+
+                storage.upload_json(
+                    data=result_document,
+                    key=result_key,
+                )
+
+                storage_result.update(
+                    {
+                        "saved": True,
+                        "video_key": video_key,
+                        "result_key": result_key,
+                    }
+                )
+
+            except RuntimeError as error:
+                storage_result[
+                    "error"
+                ] = str(error)
+
+        return {
+            **response,
+            "storage": storage_result,
         }
 
     except ValueError as error:
