@@ -13,6 +13,10 @@ from fastapi import (
     UploadFile,
 )
 
+from src.storage.s3_storage import (
+    S3Storage,
+)
+
 from src.vision.inference import (
     FloodAnalyzer,
 )
@@ -34,7 +38,7 @@ app = FastAPI(
         "API for urban flood monitoring "
         "using computer vision and AI."
     ),
-    version="0.3.0",
+    version="0.4.0",
 )
 
 
@@ -44,13 +48,15 @@ video_analyzer = VideoFloodAnalyzer(
     flood_analyzer
 )
 
+storage = S3Storage()
+
 
 @app.get("/")
 def root():
     return {
         "name": "FloodLens AI",
         "status": "running",
-        "version": "0.3.0",
+        "version": "0.4.0",
     }
 
 
@@ -59,6 +65,7 @@ def health():
     return {
         "status": "healthy",
         "model_loaded": True,
+        "s3_enabled": storage.enabled,
     }
 
 
@@ -136,9 +143,82 @@ async def analyze_image(
         image
     )
 
-    return {
+    analysis_id = (
+        storage.create_analysis_id()
+    )
+
+    response = {
+        "analysis_id": analysis_id,
         "filename": file.filename,
         **analysis,
+    }
+
+    storage_result = {
+        "enabled": storage.enabled,
+        "saved": False,
+        "bucket": (
+            storage.bucket_name
+            if storage.enabled
+            else None
+        ),
+        "image_key": None,
+        "result_key": None,
+    }
+
+    if storage.enabled:
+        try:
+            image_key = storage.build_key(
+                category="uploads/images",
+                analysis_id=analysis_id,
+                filename=(
+                    file.filename
+                    or "image"
+                ),
+            )
+
+            result_key = storage.build_key(
+                category="results/images",
+                analysis_id=analysis_id,
+                filename="analysis.json",
+            )
+
+            storage.upload_bytes(
+                data=image_bytes,
+                key=image_key,
+                content_type=(
+                    file.content_type
+                    or "application/octet-stream"
+                ),
+            )
+
+            result_document = {
+                **response,
+                "storage": {
+                    "image_key": image_key,
+                },
+            }
+
+            storage.upload_json(
+                data=result_document,
+                key=result_key,
+            )
+
+            storage_result.update(
+                {
+                    "saved": True,
+                    "image_key": image_key,
+                    "result_key": result_key,
+                }
+            )
+
+        except RuntimeError as error:
+            storage_result[
+                "error"
+            ] = str(error)
+
+    return {
+        **response,
+        "storage": storage_result,
     }
 
 

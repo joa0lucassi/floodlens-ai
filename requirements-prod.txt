@@ -4,3 +4,4 @@ python-multipart==0.0.32
 numpy==2.5.3
 opencv-python==5.0.0.93
 ultralytics==8.4.171
+boto3==1.43.108
