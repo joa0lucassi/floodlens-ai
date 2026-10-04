@@ -14,6 +14,8 @@ from fastapi import (
     UploadFile,
 )
 
+from fastapi.responses import FileResponse
+
 from src.storage.s3_storage import (
     S3Storage,
 )
@@ -32,6 +34,10 @@ RISK_ASSESSMENT_PATH = Path(
     "risk_assessment.json"
 )
 
+DASHBOARD_PATH = Path(
+    "src/web/index.html"
+)
+
 
 app = FastAPI(
     title="FloodLens AI API",
@@ -39,7 +45,7 @@ app = FastAPI(
         "API for urban flood monitoring "
         "using computer vision and AI."
     ),
-    version="0.6.0",
+    version="0.7.0",
 )
 
 
@@ -52,13 +58,20 @@ video_analyzer = VideoFloodAnalyzer(
 storage = S3Storage()
 
 
-@app.get("/")
-def root():
-    return {
-        "name": "FloodLens AI",
-        "status": "running",
-        "version": "0.6.0",
-    }
+@app.get(
+    "/",
+    include_in_schema=False,
+)
+def dashboard():
+    if not DASHBOARD_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Dashboard not found.",
+        )
+
+    return FileResponse(
+        DASHBOARD_PATH
+    )
 
 
 @app.get("/health")
@@ -67,6 +80,7 @@ def health():
         "status": "healthy",
         "model_loaded": True,
         "s3_enabled": storage.enabled,
+        "version": "0.7.0",
     }
 
 
