@@ -6,7 +6,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from botocore.exceptions import (
+    BotoCoreError,
+    ClientError,
+)
 
 
 class S3Storage:
@@ -27,7 +30,7 @@ class S3Storage:
         if self.enabled:
             self.client = boto3.client(
                 "s3",
-                region_name=self.region
+                region_name=self.region,
             )
         else:
             self.client = None
@@ -44,7 +47,7 @@ class S3Storage:
         return re.sub(
             r"[^A-Za-z0-9._-]",
             "_",
-            filename
+            filename,
         )
 
     def create_analysis_id(self):
@@ -56,7 +59,7 @@ class S3Storage:
         self,
         category,
         analysis_id,
-        filename
+        filename,
     ):
         now = datetime.now(
             timezone.utc
@@ -81,7 +84,7 @@ class S3Storage:
         self,
         data,
         key,
-        content_type
+        content_type,
     ):
         if not self.enabled:
             return None
@@ -91,25 +94,25 @@ class S3Storage:
                 Bucket=self.bucket_name,
                 Key=key,
                 Body=data,
-                ContentType=content_type
+                ContentType=content_type,
             )
 
             return key
 
         except (
             ClientError,
-            BotoCoreError
+            BotoCoreError,
         ) as error:
             raise RuntimeError(
-                f"Failed to upload file to S3: "
-                f"{error}"
+                "Failed to upload file "
+                f"to S3: {error}"
             ) from error
 
     def upload_file(
         self,
         file_path,
         key,
-        content_type
+        content_type,
     ):
         if not self.enabled:
             return None
@@ -121,24 +124,24 @@ class S3Storage:
                 Key=key,
                 ExtraArgs={
                     "ContentType": content_type
-                }
+                },
             )
 
             return key
 
         except (
             ClientError,
-            BotoCoreError
+            BotoCoreError,
         ) as error:
             raise RuntimeError(
-                f"Failed to upload file to S3: "
-                f"{error}"
+                "Failed to upload file "
+                f"to S3: {error}"
             ) from error
 
     def upload_json(
         self,
         data,
-        key
+        key,
     ):
         if not self.enabled:
             return None
@@ -146,7 +149,7 @@ class S3Storage:
         body = json.dumps(
             data,
             ensure_ascii=False,
-            indent=2
+            indent=2,
         ).encode(
             "utf-8"
         )
@@ -156,16 +159,131 @@ class S3Storage:
                 Bucket=self.bucket_name,
                 Key=key,
                 Body=body,
-                ContentType="application/json"
+                ContentType="application/json",
             )
 
             return key
 
         except (
             ClientError,
-            BotoCoreError
+            BotoCoreError,
         ) as error:
             raise RuntimeError(
-                f"Failed to upload JSON to S3: "
-                f"{error}"
+                "Failed to upload JSON "
+                f"to S3: {error}"
+            ) from error
+
+    def list_analysis_results(
+        self,
+        limit=20,
+    ):
+        if not self.enabled:
+            return []
+
+        prefixes = {
+            "image": "results/images/",
+            "video": "results/videos/",
+        }
+
+        objects = []
+
+        try:
+            paginator = (
+                self.client
+                .get_paginator(
+                    "list_objects_v2"
+                )
+            )
+
+            for (
+                analysis_type,
+                prefix
+            ) in prefixes.items():
+
+                pages = paginator.paginate(
+                    Bucket=self.bucket_name,
+                    Prefix=prefix,
+                )
+
+                for page in pages:
+                    for item in page.get(
+                        "Contents",
+                        [],
+                    ):
+                        if not item[
+                            "Key"
+                        ].endswith(
+                            ".json"
+                        ):
+                            continue
+
+                        objects.append(
+                            {
+                                "analysis_type":
+                                    analysis_type,
+                                "key":
+                                    item["Key"],
+                                "last_modified":
+                                    item[
+                                        "LastModified"
+                                    ],
+                            }
+                        )
+
+            objects.sort(
+                key=lambda item:
+                    item["last_modified"],
+                reverse=True,
+            )
+
+            objects = objects[:limit]
+
+            analyses = []
+
+            for item in objects:
+                response = (
+                    self.client.get_object(
+                        Bucket=
+                            self.bucket_name,
+                        Key=item["key"],
+                    )
+                )
+
+                content = (
+                    response["Body"]
+                    .read()
+                    .decode("utf-8")
+                )
+
+                data = json.loads(
+                    content
+                )
+
+                data["history"] = {
+                    "analysis_type":
+                        item[
+                            "analysis_type"
+                        ],
+                    "result_key":
+                        item["key"],
+                    "created_at":
+                        item[
+                            "last_modified"
+                        ].isoformat(),
+                }
+
+                analyses.append(
+                    data
+                )
+
+            return analyses
+
+        except (
+            ClientError,
+            BotoCoreError,
+            json.JSONDecodeError,
+        ) as error:
+            raise RuntimeError(
+                "Failed to retrieve "
+                f"analysis history: {error}"
             ) from error

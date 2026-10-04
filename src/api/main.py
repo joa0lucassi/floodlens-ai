@@ -10,6 +10,7 @@ from fastapi import (
     FastAPI,
     File,
     HTTPException,
+    Query,
     UploadFile,
 )
 
@@ -38,7 +39,7 @@ app = FastAPI(
         "API for urban flood monitoring "
         "using computer vision and AI."
     ),
-    version="0.5.0",
+    version="0.6.0",
 )
 
 
@@ -56,7 +57,7 @@ def root():
     return {
         "name": "FloodLens AI",
         "status": "running",
-        "version": "0.5.0",
+        "version": "0.6.0",
     }
 
 
@@ -100,6 +101,41 @@ def latest_risk():
         )
 
     return assessment
+
+
+@app.get("/analyses/history")
+def analyses_history(
+    limit: int = Query(
+        default=20,
+        ge=1,
+        le=100,
+    )
+):
+    if not storage.enabled:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "S3 storage is not enabled."
+            ),
+        )
+
+    try:
+        analyses = (
+            storage.list_analysis_results(
+                limit=limit
+            )
+        )
+
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=500,
+            detail=str(error),
+        )
+
+    return {
+        "count": len(analyses),
+        "analyses": analyses,
+    }
 
 
 @app.post("/analyze/image")
