@@ -372,6 +372,173 @@
                     1fr;
             }
         }
+
+        /* Local and cloud analysis workspace */
+        .status.local {
+            background: #12273b;
+            color: #93c5fd;
+        }
+
+        .status.error {
+            background: #3b1720;
+            color: #fda4af;
+        }
+
+        .upload-panel {
+            margin-bottom: 26px;
+            border: 1px solid #25425e;
+            background: linear-gradient(115deg, #12213b, #101827 65%);
+        }
+
+        .eyebrow {
+            color: #38bdf8;
+            letter-spacing: .12em;
+            font-weight: 700;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .upload-header h2 {
+            font-size: 21px;
+            margin-bottom: 7px;
+        }
+
+        .muted {
+            color: #94a3b8;
+            line-height: 1.55;
+            font-size: 13px;
+        }
+
+        .upload-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .file-input {
+            flex: 1;
+            min-width: 235px;
+            max-width: 650px;
+            padding: 12px;
+            border: 1px dashed #486581;
+            border-radius: 9px;
+            background: #0c172a;
+            color: #e2e8f0;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .file-input::file-selector-button {
+            border: 0;
+            background: #203855;
+            color: #dbeafe;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .primary-button {
+            background: #38bdf8;
+            color: #082032;
+            padding: 14px 19px;
+            border: none;
+            border-radius: 9px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .primary-button:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        .upload-feedback {
+            min-height: 21px;
+            margin-top: 12px;
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .upload-feedback.error {
+            color: #fda4af;
+        }
+
+        .preview-media {
+            max-width: 100%;
+            max-height: 310px;
+            border-radius: 9px;
+            margin-top: 12px;
+            background: #050b17;
+        }
+
+        .live-pill {
+            border: 1px solid #334b65;
+            border-radius: 999px;
+            padding: 7px 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+
+        .section-note {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 8px 0 16px;
+        }
+
+        .risk-value {
+            overflow-wrap: anywhere;
+        }
+
+        .risk-description {
+            max-width: 300px;
+        }
+
+        .summary-note {
+            color: #94a3b8;
+            line-height: 1.55;
+            margin-top: 14px;
+            font-size: 12px;
+        }
+
+        .history-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        @media (max-width: 600px) {
+            .upload-header {
+                flex-direction: column;
+            }
+
+            .file-input,
+            .primary-button {
+                width: 100%;
+                max-width: none;
+            }
+        }
+
     </style>
 </head>
 
@@ -392,11 +559,48 @@
         class="status"
         id="systemStatus"
     >
-        ● System Online
+        ● Checking API...
     </div>
 </header>
 
 <main>
+
+    <section class="panel upload-panel" aria-labelledby="analyzeTitle">
+        <div class="upload-header">
+            <div>
+                <div class="eyebrow">LIVE ANALYSIS</div>
+                <h2 id="analyzeTitle">Analyze a street scene</h2>
+                <p class="muted">
+                    Select an image or video. The model runs through the FloodLens API.
+                    Short clips work best for CPU-based demonstrations.
+                </p>
+            </div>
+            <span class="live-pill" id="storageMode">Checking storage...</span>
+        </div>
+
+        <form class="upload-form" id="analysisForm">
+            <label for="mediaFile" class="muted">Image or video</label>
+            <input
+                class="file-input"
+                id="mediaFile"
+                name="file"
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.avi,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-msvideo"
+                required
+            >
+            <button class="primary-button" id="runButton" type="submit">
+                Analyze file
+            </button>
+        </form>
+        <p id="uploadFeedback" class="upload-feedback" role="status" aria-live="polite">
+            No file selected.
+        </p>
+        <div id="mediaPreview"></div>
+        <p class="section-note">
+            Experimental flood monitoring prototype. Visual image area is not water depth,
+            and reflective streets can produce false alarms.
+        </p>
+    </section>
 
     <section class="cards">
 
@@ -413,7 +617,7 @@
             </div>
 
             <div class="card-subtitle">
-                Stored in Amazon S3
+                <span id="analysesSubtitle">Loading analysis history...</span>
             </div>
         </div>
 
@@ -478,6 +682,7 @@
             <h2>
                 Flooded Area Timeline
             </h2>
+            <p class="section-note" id="timelineHint">Upload a video to view the sampled timeline.</p>
 
             <canvas
                 id="timelineChart"
@@ -488,7 +693,7 @@
         <div class="panel">
 
             <h2>
-                Current Risk
+                Current Assessment
             </h2>
 
             <div class="risk-box">
@@ -516,11 +721,11 @@
 
     <section class="panel">
 
-        <h2>
-            Analysis History
-        </h2>
-
-        <table>
+        <div class="history-heading">
+            <h2>Analysis History</h2>
+            <span class="section-note" id="historyMode">Session results</span>
+        </div>
+        <div class="table-scroll"><table>
 
             <thead>
                 <tr>
@@ -540,13 +745,13 @@
                         colspan="6"
                         class="empty"
                     >
-                        Loading analyses...
+                        No analyses yet. Upload a file to begin.
                     </td>
                 </tr>
 
             </tbody>
 
-        </table>
+        </table></div>
 
     </section>
 
@@ -559,400 +764,462 @@
 
 
 <script>
+    "use strict";
+
+    // Works with or without S3. Browser-session analyses are not persisted.
+    let cloudAnalyses = [];
+    let sessionAnalyses = [];
+    let activeAnalysis = null;
+    let storageEnabled = false;
+    let cloudHistoryLoaded = false;
+    let currentPreviewUrl = null;
     let timelineChart = null;
 
+    const el = (id) => document.getElementById(id);
 
-    function findLatestVideo(
-        analyses
-    ) {
-        return analyses.find(
-            item =>
-                item.history
-                    ?.analysis_type
-                === "video"
-        );
+    function setText(id, value) {
+        el(id).textContent = value == null ? "-" : String(value);
     }
 
-
-    function formatDate(
-        value
-    ) {
-        if (!value) {
-            return "-";
-        }
-
-        return new Date(
-            value
-        ).toLocaleString();
+    function kindOf(analysis) {
+        return analysis._kind
+            || (analysis.history && analysis.history.analysis_type)
+            || (analysis.video ? "video" : "image");
     }
 
-
-    function renderCards(
-        analyses
-    ) {
-        document
-            .getElementById(
-                "totalAnalyses"
-            )
-            .textContent =
-                analyses.length;
-
-        const video =
-            findLatestVideo(
-                analyses
-            );
-
-        if (!video) {
-            return;
-        }
-
-        const risk =
-            video.risk || {};
-
-        document
-            .getElementById(
-                "latestRisk"
-            )
-            .textContent =
-                risk.risk_level
-                || "-";
-
-        document
-            .getElementById(
-                "floodedArea"
-            )
-            .textContent =
-                risk
-                    .flooded_area_average
-                !== undefined
-                ? `${risk.flooded_area_average}%`
-                : "-";
-
-        document
-            .getElementById(
-                "trend"
-            )
-            .textContent =
-                risk.trend
-                || "-";
-
-        document
-            .getElementById(
-                "riskDisplay"
-            )
-            .textContent =
-                risk.risk_level
-                || "-";
-
-        document
-            .getElementById(
-                "riskDescription"
-            )
-            .textContent =
-                `Risk score ${
-                    risk.risk_score
-                    ?? "-"
-                } / 4 · ${
-                    risk.reliability
-                    ?? "Unknown"
-                } reliability`;
+    function dateOf(analysis) {
+        return analysis._session_at
+            || (analysis.history && analysis.history.created_at)
+            || null;
     }
 
+    function formatDate(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+    }
 
-    function renderTimeline(
-        analyses
-    ) {
-        const video =
-            findLatestVideo(
-                analyses
-            );
+    function getAnalyses() {
+        const all = [...sessionAnalyses, ...cloudAnalyses];
+        const unique = [];
+        const ids = new Set();
 
-        if (
-            !video
-            || !video.timeline
-        ) {
-            return;
+        for (const item of all) {
+            if (item.analysis_id && ids.has(item.analysis_id)) continue;
+            if (item.analysis_id) ids.add(item.analysis_id);
+            unique.push(item);
         }
 
-        const labels =
-            video.timeline.map(
-                point =>
-                    `${point.time_seconds}s`
-            );
+        return unique.sort((a, b) => {
+            const left = Date.parse(dateOf(a) || "") || 0;
+            const right = Date.parse(dateOf(b) || "") || 0;
+            return right - left;
+        });
+    }
 
-        const values =
-            video.timeline.map(
-                point =>
-                    point
-                        .flooded_area_percent
-            );
-
-        const canvas =
-            document.getElementById(
-                "timelineChart"
-            );
+    function renderTimeline(analysis) {
+        const canvas = el("timelineChart");
+        const hint = el("timelineHint");
 
         if (timelineChart) {
             timelineChart.destroy();
+            timelineChart = null;
         }
 
-        timelineChart =
-            new Chart(
-                canvas,
-                {
-                    type: "line",
+        const timeline = kindOf(analysis || {}) === "video"
+            && Array.isArray(analysis.timeline)
+            ? analysis.timeline
+            : [];
 
-                    data: {
-                        labels: labels,
-
-                        datasets: [
-                            {
-                                label:
-                                    "Flooded area (%)",
-
-                                data:
-                                    values,
-
-                                tension:
-                                    0.35
-                            }
-                        ]
-                    },
-
-                    options: {
-                        responsive:
-                            true,
-
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color:
-                                        "#cbd5e1"
-                                }
-                            }
-                        },
-
-                        scales: {
-                            x: {
-                                ticks: {
-                                    color:
-                                        "#94a3b8"
-                                },
-
-                                grid: {
-                                    color:
-                                        "#1f2937"
-                                }
-                            },
-
-                            y: {
-                                ticks: {
-                                    color:
-                                        "#94a3b8"
-                                },
-
-                                grid: {
-                                    color:
-                                        "#1f2937"
-                                }
-                            }
-                        }
-                    }
-                }
-            );
-    }
-
-
-    function renderHistory(
-        analyses
-    ) {
-        const table =
-            document.getElementById(
-                "historyTable"
-            );
-
-        table.innerHTML = "";
-
-        if (
-            analyses.length
-            === 0
-        ) {
-            table.innerHTML = `
-                <tr>
-                    <td
-                        colspan="6"
-                        class="empty"
-                    >
-                        No analyses found.
-                    </td>
-                </tr>
-            `;
-
+        if (timeline.length === 0) {
+            hint.textContent = "Upload a video to view the sampled timeline.";
+            canvas.hidden = true;
             return;
         }
 
-        analyses.forEach(
-            analysis => {
+        canvas.hidden = false;
+        hint.textContent =
+            "Estimated segmented image area (not physical water depth). "
+            + timeline.length + " sampled frames.";
 
-                const type =
-                    analysis.history
-                        ?.analysis_type
-                    || "-";
+        if (typeof Chart === "undefined") {
+            canvas.hidden = true;
+            hint.textContent += " Chart unavailable: Chart.js could not load.";
+            return;
+        }
 
-                let area = "-";
-                let risk = "-";
-                let trend = "-";
-
-                if (
-                    type === "video"
-                ) {
-                    area =
-                        analysis.risk
-                            ?.flooded_area_average
-                        ?? "-";
-
-                    risk =
-                        analysis.risk
-                            ?.risk_level
-                        ?? "-";
-
-                    trend =
-                        analysis.risk
-                            ?.trend
-                        ?? "-";
-                }
-
-                if (
-                    type === "image"
-                ) {
-                    area =
-                        analysis
-                            .flooded_area_percent
-                        ?? "-";
-
-                    risk =
-                        analysis
-                            .flood_detected
-                        ? "DETECTED"
-                        : "NONE";
-                }
-
-                const row =
-                    document.createElement(
-                        "tr"
-                    );
-
-                row.innerHTML = `
-                    <td>
-                        <span
-                            class="badge ${
-                                type === "video"
-                                ? "badge-video"
-                                : "badge-image"
-                            }"
-                        >
-                            ${type.toUpperCase()}
-                        </span>
-                    </td>
-
-                    <td>
-                        ${analysis.filename || "-"}
-                    </td>
-
-                    <td>
-                        ${
-                            area !== "-"
-                            ? `${area}%`
-                            : "-"
+        timelineChart = new Chart(canvas, {
+            type: "line",
+            data: {
+                labels: timeline.map((p) => String(p.time_seconds) + "s"),
+                datasets: [{
+                    label: "Segmented image area (%)",
+                    data: timeline.map((p) => Number(p.flooded_area_percent) || 0),
+                    borderColor: "#38bdf8",
+                    backgroundColor: "rgba(56, 189, 248, .12)",
+                    pointRadius: 3,
+                    tension: .25,
+                    fill: true
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: "#cbd5e1" } }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: "#94a3b8" },
+                        grid: { color: "#1f2937" }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: "#94a3b8" },
+                        grid: { color: "#1f2937" },
+                        title: {
+                            display: true,
+                            text: "Image area (%)",
+                            color: "#94a3b8"
                         }
-                    </td>
-
-                    <td>
-                        ${risk}
-                    </td>
-
-                    <td>
-                        ${trend}
-                    </td>
-
-                    <td>
-                        ${
-                            formatDate(
-                                analysis.history
-                                    ?.created_at
-                            )
-                        }
-                    </td>
-                `;
-
-                table.appendChild(
-                    row
-                );
+                    }
+                }
             }
+        });
+        // Container needs a defined height for responsive Chart.js rendering.
+    }
+
+    function renderAssessment(analysis) {
+        if (!analysis) {
+            setText("latestRisk", "-");
+            setText("floodedArea", "-");
+            setText("trend", "-");
+            setText("riskDisplay", "-");
+            setText("riskDescription", "Waiting for an analysis.");
+            renderTimeline(null);
+            return;
+        }
+
+        if (kindOf(analysis) === "video") {
+            const risk = analysis.risk || {};
+            const temporal = analysis.temporal || {};
+            const status = temporal.status || "UNKNOWN";
+
+            setText("latestRisk", risk.risk_level || "NOT ASSESSED");
+            setText(
+                "floodedArea",
+                risk.flooded_area_average == null
+                    ? "-"
+                    : String(risk.flooded_area_average) + "%"
+            );
+            setText("trend", risk.trend || "-");
+            setText("riskDisplay", status.replaceAll("_", " "));
+
+            const confirmed = temporal.confirmed_windows == null
+                ? "-"
+                : temporal.confirmed_windows;
+            const samples = analysis.video
+                ? analysis.video.samples_analyzed
+                : "-";
+
+            setText(
+                "riskDescription",
+                "Temporal rule: 3 of 5 positive samples. "
+                + confirmed + " confirmed windows across " + samples + " samples. "
+                + "Risk: " + (risk.risk_level || "not assessed")
+                + " (experimental heuristic)."
+            );
+        } else {
+            const positive = Boolean(analysis.flood_detected);
+            setText("latestRisk", "NOT ASSESSED");
+            setText(
+                "floodedArea",
+                analysis.flooded_area_percent == null
+                    ? "-"
+                    : String(analysis.flooded_area_percent) + "%"
+            );
+            setText("trend", "-");
+            setText(
+                "riskDisplay",
+                positive ? "FLOOD CANDIDATE" : "NOT DETECTED"
+            );
+            setText(
+                "riskDescription",
+                "Single-image segmentation only: no temporal confirmation "
+                + "or calibrated physical risk assessment."
+            );
+        }
+        renderTimeline(analysis);
+    }
+
+    function createCell(row, text) {
+        const cell = document.createElement("td");
+        cell.textContent = text == null ? "-" : String(text);
+        row.appendChild(cell);
+        return cell;
+    }
+
+    function renderHistory(analyses) {
+        const body = el("historyTable");
+        body.replaceChildren();
+
+        if (!analyses.length) {
+            const row = document.createElement("tr");
+            const cell = createCell(
+                row,
+                storageEnabled
+                    ? "No stored analyses yet. Upload a file to begin."
+                    : "No session analyses yet. Upload a file to begin."
+            );
+            cell.colSpan = 6;
+            cell.className = "empty";
+            body.appendChild(row);
+            return;
+        }
+
+        for (const analysis of analyses.slice(0, 50)) {
+            const kind = kindOf(analysis);
+            const risk = analysis.risk || {};
+            const area = kind === "video"
+                ? risk.flooded_area_average
+                : analysis.flooded_area_percent;
+
+            const row = document.createElement("tr");
+            const typeCell = createCell(row, kind.toUpperCase());
+            typeCell.style.color = kind === "video" ? "#93c5fd" : "#7dd3fc";
+            createCell(row, analysis.filename || "-");
+            createCell(row, area == null ? "-" : String(area) + "%");
+            createCell(
+                row,
+                kind === "video"
+                    ? (risk.risk_level || "NOT ASSESSED")
+                    : (analysis.flood_detected ? "CANDIDATE" : "NONE DETECTED")
+            );
+            createCell(row, kind === "video" ? (risk.trend || "-") : "-");
+            createCell(row, formatDate(dateOf(analysis)));
+            body.appendChild(row);
+        }
+    }
+
+    function renderAll() {
+        const analyses = getAnalyses();
+        const selected = activeAnalysis || analyses[0] || null;
+        setText(
+            "totalAnalyses",
+            storageEnabled && cloudHistoryLoaded
+                ? analyses.length
+                : sessionAnalyses.length
+        );
+
+        setText(
+            "analysesSubtitle",
+            storageEnabled && cloudHistoryLoaded
+                ? "Cloud history + current session"
+                : "This browser session (not stored)"
+        );
+
+        setText(
+            "historyMode",
+            storageEnabled && cloudHistoryLoaded
+                ? "S3 + current session"
+                : "Browser session only"
+        );
+
+        renderAssessment(selected);
+        renderHistory(analyses);
+    }
+
+    function setSystemStatus(text, className) {
+        const status = el("systemStatus");
+        status.textContent = text;
+        status.className = "status " + (className || "");
+    }
+
+    async function refreshCloudHistory() {
+        if (!storageEnabled) return;
+
+        try {
+            const response = await fetch("/analyses/history?limit=50");
+            if (!response.ok) throw new Error("Cloud history unavailable");
+            const data = await response.json();
+            cloudAnalyses = Array.isArray(data.analyses) ? data.analyses : [];
+            cloudHistoryLoaded = true;
+        } catch (error) {
+            cloudHistoryLoaded = false;
+            setSystemStatus("● API READY · HISTORY UNAVAILABLE", "local");
+        }
+        renderAll();
+    }
+
+    async function initializeDashboard() {
+        try {
+            const response = await fetch("/health", { cache: "no-store" });
+            if (!response.ok) throw new Error("API health check failed");
+
+            const health = await response.json();
+            if (health.status !== "healthy") {
+                throw new Error("API is not healthy");
+            }
+
+            storageEnabled = Boolean(health.s3_enabled);
+            setText(
+                "storageMode",
+                storageEnabled ? "AWS S3 enabled" : "Local mode · no S3"
+            );
+
+            setSystemStatus(
+                storageEnabled ? "● API ONLINE · S3 ON" : "● API ONLINE · LOCAL",
+                storageEnabled ? "" : "local"
+            );
+
+            renderAll();
+            if (storageEnabled) await refreshCloudHistory();
+        } catch (error) {
+            setSystemStatus("● API CONNECTION FAILED", "error");
+            setText("storageMode", "API unavailable");
+            setText("uploadFeedback", "Cannot reach the API. Check /health.");
+        }
+    }
+
+    function mediaKind(file) {
+        const name = file.name.toLowerCase();
+        if (/\.(jpg|jpeg|png|webp)$/.test(name)) return "image";
+        if (/\.(mp4|mov|avi)$/.test(name)) return "video";
+        return null;
+    }
+
+    function mimeType(file, kind) {
+        const extension = file.name.toLowerCase().split(".").pop();
+        const types = {
+            jpg: "image/jpeg",
+            jpeg: "image/jpeg",
+            png: "image/png",
+            webp: "image/webp",
+            mp4: "video/mp4",
+            mov: "video/quicktime",
+            avi: "video/x-msvideo"
+        };
+        return types[extension] || (
+            kind === "video" ? "video/mp4" : "image/jpeg"
         );
     }
 
+    function previewSelectedFile() {
+        const file = el("mediaFile").files[0];
+        const container = el("mediaPreview");
 
-    async function loadDashboard() {
-        try {
-            const response =
-                await fetch(
-                    "/analyses/history?limit=50"
-                );
+        if (currentPreviewUrl) {
+            URL.revokeObjectURL(currentPreviewUrl);
+            currentPreviewUrl = null;
+        }
+        container.replaceChildren();
 
-            if (!response.ok) {
-                throw new Error(
-                    "History unavailable"
-                );
-            }
-
-            const data =
-                await response.json();
-
-            const analyses =
-                data.analyses
-                || [];
-
-            renderCards(
-                analyses
-            );
-
-            renderTimeline(
-                analyses
-            );
-
-            renderHistory(
-                analyses
-            );
+        if (!file) {
+            setText("uploadFeedback", "No file selected.");
+            return;
         }
 
-        catch (error) {
-            document
-                .getElementById(
-                    "systemStatus"
-                )
-                .textContent =
-                    "● Data unavailable";
+        const kind = mediaKind(file);
+        if (!kind) {
+            setText("uploadFeedback", "Unsupported format. Use JPEG, PNG, WebP, MP4, MOV or AVI.");
+            return;
+        }
 
-            document
-                .getElementById(
-                    "historyTable"
-                )
-                .innerHTML = `
-                    <tr>
-                        <td
-                            colspan="6"
-                            class="empty"
-                        >
-                            Analysis history is unavailable.
-                        </td>
-                    </tr>
-                `;
+        setText(
+            "uploadFeedback",
+            "Ready: " + file.name + " (" + (file.size / (1024 * 1024)).toFixed(1)
+            + " MB). Processing time depends on your CPU."
+        );
+
+        currentPreviewUrl = URL.createObjectURL(file);
+        const media = document.createElement(kind === "image" ? "img" : "video");
+        media.src = currentPreviewUrl;
+        media.className = "preview-media";
+        media.setAttribute("aria-label", "Selected file preview");
+
+        if (kind === "video") {
+            media.controls = true;
+            media.preload = "metadata";
+        } else {
+            media.alt = "Selected image preview";
+        }
+        container.appendChild(media);
+    }
+
+    async function submitAnalysis(event) {
+        event.preventDefault();
+        const file = el("mediaFile").files[0];
+        const kind = file && mediaKind(file);
+        if (!file || !kind) {
+            setText("uploadFeedback", "Please select a supported image or video.");
+            return;
+        }
+
+        const button = el("runButton");
+        const message = el("uploadFeedback");
+        button.disabled = true;
+        button.textContent = "Analyzing...";
+        message.classList.remove("error");
+        message.textContent =
+            "Uploading and processing " + file.name
+            + ". Keep this page open; CPU video inference can take a while.";
+
+        const payload = new FormData();
+        const mime = mimeType(file, kind);
+        const corrected = file.type === mime
+            ? file
+            : new File([file], file.name, { type: mime });
+        payload.append("file", corrected, file.name);
+
+        try {
+            const response = await fetch("/analyze/" + kind, {
+                method: "POST",
+                body: payload
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const detail = typeof data.detail === "string"
+                    ? data.detail
+                    : "HTTP " + response.status;
+                throw new Error(detail);
+            }
+
+            const record = {
+                ...data,
+                _kind: kind,
+                _session_at: new Date().toISOString()
+            };
+
+            sessionAnalyses.unshift(record);
+            activeAnalysis = record;
+            renderAll();
+
+            const temporalStatus = kind === "video" && data.temporal
+                ? data.temporal.status
+                : (data.flood_detected ? "Flood candidate" : "Not detected");
+            const storageMessage = data.storage && data.storage.saved
+                ? " Saved to S3."
+                : " Session only; not saved to S3.";
+
+            message.textContent =
+                "Analysis complete: " + temporalStatus + "." + storageMessage;
+
+            if (storageEnabled && data.storage && data.storage.saved) {
+                await refreshCloudHistory();
+            }
+        } catch (error) {
+            message.classList.add("error");
+            message.textContent = "Analysis failed: " + error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = "Analyze file";
         }
     }
 
-
-    loadDashboard();
+    el("mediaFile").addEventListener("change", previewSelectedFile);
+    el("analysisForm").addEventListener("submit", submitAnalysis);
+    renderAll();
+    initializeDashboard();
 </script>
 
 </body>
