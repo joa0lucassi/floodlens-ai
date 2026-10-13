@@ -570,6 +570,25 @@ The project focuses on practical use of computer vision for urban flood monitori
 
 ---
 
+## License
+
+Copyright (c) 2026 Joao Lucas (original FloodLens AI contributions).
+
+The original FloodLens AI source code in this repository is licensed under the **GNU Affero General Public License version 3 (AGPL-3.0-only)**. See [LICENSE](LICENSE) for the complete terms.
+
+When running an AGPL-covered modified application as a network service, provide users access to its corresponding source code. The dashboard includes a repository source link; downstream deployments remain responsible for satisfying all applicable license conditions.
+
+**Third-party components and datasets have their own licenses.** In particular:
+
+- Ultralytics YOLO11 code and trained models are offered under AGPL-3.0 or separate enterprise terms; see [Ultralytics licensing](https://www.ultralytics.com/license).
+- OpenCV, PyTorch, FastAPI and other dependencies remain subject to their respective license terms.
+- Training/evaluation images and videos, dataset metadata, and content originating from others are **not relicensed by this repository**. Check applicable usage, attribution and distribution permissions before sharing these materials.
+- Trained weights are currently excluded from Git; redistribution of the official checkpoint is pending a separate rights and attribution review.
+
+The project's experimental status and model limitations are documented above. This open-source license does not constitute a certification for emergency response, privacy compliance or operational safety.
+
+---
+
 ## Author
 
 **Joao Lucas**
