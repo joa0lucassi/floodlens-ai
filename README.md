@@ -327,32 +327,24 @@ The root endpoint serves the FloodLens dashboard.
 
 ## Development Status
 
-There are currently two related pipeline stages in the repository.
+### Integrated API pipeline
 
-### API pipeline
-
-The current API implementation uses the production `FloodAnalyzer` with:
+The API now implements the research configuration used in the Final Holdout V2:
 
 ```text
-Inference size: 640
-Confidence threshold: 0.25
-```
-
-### Research candidate
-
-The independently evaluated Final Holdout V2 pipeline uses:
-
-```text
+Model: MultiDomain YOLO11-seg (best.pt)
 Inference size: 960
 Confidence threshold: 0.25
-Sampling: 1 frame / second
+Video sampling: 1 frame / second
 Temporal window: 5
-Confirmation: >= 3 positive samples
+Confirmation: >= 3 positive samples per complete window
 ```
 
-The `960 + temporal 3/5` candidate has been evaluated independently but has **not yet been integrated into the production API pipeline**.
+Video responses include temporal confirmation status, a time-indexed timeline, and an experimental heuristic risk assessment. Videos with fewer than five usable samples return an insufficient-data status rather than a definitive negative. The heuristic risk score is not a calibrated probability or a measured water depth.
 
-This separation is intentional while experimentation continues.
+The updated image and video APIs were tested locally and in Docker, then deployed and successfully tested on AWS ECS with S3 persistence on 2026-10-13.
+
+The separate V3 hard-negative fine-tuning experiment did not show an improvement on the 20-image development regression set; the original MultiDomain remains the official model. The frozen Final Holdout V2 was not rerun for these integrations. See [AWS end-to-end validation](docs/aws_end_to_end_validation_2026-10-13.md).
 
 ---
 
@@ -473,7 +465,7 @@ docker run --rm -p 8000:8000 floodlens-api
 
 ## AWS Deployment
 
-The project has been prepared for containerized cloud deployment.
+The containerized API was deployed and functionally validated on Amazon ECS on 2026-10-13. An uploaded development video was processed with the 960px + 3/5 temporal pipeline, and the resulting analysis was saved to Amazon S3. After testing, the ECS service was scaled to zero tasks; ongoing storage/logging costs may still apply.
 
 ```text
 Docker image
@@ -490,7 +482,7 @@ FloodLens API
      +---- AWS S3
 ```
 
-S3 integration stores uploaded media and analysis results when cloud storage is enabled.
+S3 integration stores uploaded media and analysis results when cloud storage is enabled. For the observed cloud test and cleanup procedure, see [AWS end-to-end validation](docs/aws_end_to_end_validation_2026-10-13.md). This smoke test does not establish production reliability or operational emergency suitability.
 
 ---
 
@@ -517,7 +509,7 @@ Current priorities include:
 - improve robustness to reflections;
 - improve nighttime performance;
 - improve rain-without-flood discrimination;
-- integrate the validated temporal pipeline into the API after further research;
+- extend functional regression tests of the integrated 960px and temporal 3/5 API;
 - expand independent evaluation with more diverse environments;
 - investigate camera-specific calibration.
 
@@ -592,11 +584,14 @@ GitHub: [joa0lucassi](https://github.com/joa0lucassi)
 ## Current Status
 
 ```text
-Research prototype
+Research prototype; 960px + temporal 3/5 API integrated
+Docker, ECS and S3 end-to-end smoke test completed on 2026-10-13
+ECS scaled back to zero service tasks after testing
 
-Independent video evaluation completed
+Independent Final Holdout V2 (20 videos):
 Recall:       100.00%
 F1-score:      80.00%
+Specificity:   50.00%
 
 Main open problem:
 persistent false positives in difficult negative scenes
