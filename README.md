@@ -395,6 +395,22 @@ Large datasets, evaluation videos, model weights, and generated results are inte
 
 ---
 
+## Competition Submission Materials (2026)
+
+These documents are **preparation drafts**, not confirmation that the project has been submitted:
+
+- [Devpost project narrative (English)](docs/submission_devpost_draft.md)
+- [Architecture diagram — OpenCV 5, temporal pipeline, AWS](docs/submission_architecture.md)
+- [Technical report draft](docs/competition_technical_report_draft.md)
+- [Final Holdout V2 evaluation](docs/final_holdout_v2_results.md)
+- [AWS end-to-end smoke test](docs/aws_end_to_end_validation_2026-10-13.md)
+- [Clean-clone reproducibility smoke test](docs/clean_clone_smoke_test.md)
+- [Dataset/model provenance and rights review](docs/data_provenance_and_model_release.md)
+
+**Pending before final submission:** judge-accessible execution or an arranged live demo, authorized model access, the demonstration video (five minutes maximum), verified media rights, and submission-form completion. AWS ECS was intentionally scaled to zero after validation.
+
+---
+
 ## Running Locally
 
 ### 1. Clone the repository
