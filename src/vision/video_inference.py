@@ -22,6 +22,7 @@ class VideoFloodAnalyzer:
         self,
         video_path: str | Path,
         sample_interval_seconds: float = SAMPLE_INTERVAL_SECONDS,
+        include_visualization: bool = False,
     ):
         if (
             not math.isfinite(sample_interval_seconds)
@@ -56,6 +57,9 @@ class VideoFloodAnalyzer:
         timeline = []
 
         current_time = 0.0
+        preview_frame = None
+        preview_time = None
+        preview_area = -1.0
 
         try:
             while current_time < duration_seconds:
@@ -72,6 +76,16 @@ class VideoFloodAnalyzer:
                 analysis = self.flood_analyzer.analyze(
                     frame
                 )
+
+                # Keep just one representative sampled frame.
+                # Re-infer that frame for its overlay only when requested.
+                if (
+                    include_visualization
+                    and analysis["flooded_area_percent"] > preview_area
+                ):
+                    preview_frame = frame.copy()
+                    preview_time = current_time
+                    preview_area = analysis["flooded_area_percent"]
 
                 raw_positive = bool(
                     analysis["flood_detected"]
@@ -195,7 +209,7 @@ class VideoFloodAnalyzer:
             "first_confirmation_seconds": first_confirmation_seconds,
         }
 
-        return {
+        response = {
             "flood_detected": flood_detected,
             "video": {
                 "fps": round(fps, 2),
@@ -210,3 +224,16 @@ class VideoFloodAnalyzer:
             "risk": risk,
             "timeline": timeline,
         }
+
+        if include_visualization and preview_frame is not None:
+            # Only one additional model prediction; none when visualization
+            # is disabled. This cannot affect the video's temporal verdict.
+            preview = self.flood_analyzer.analyze(
+                preview_frame,
+                include_visualization=True,
+            )["visualization"]
+            preview["time_seconds"] = round(preview_time, 3)
+            preview["selection_method"] = "largest_segmented_area"
+            response["visualization"] = preview
+
+        return response

@@ -154,7 +154,8 @@ def analyses_history(
 
 @app.post("/analyze/image")
 async def analyze_image(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    include_visualization: bool = Query(default=False),
 ):
     allowed_types = {
         "image/jpeg",
@@ -190,8 +191,11 @@ async def analyze_image(
         )
 
     analysis = flood_analyzer.analyze(
-        image
+        image,
+        include_visualization=include_visualization,
     )
+    # Keep base64 previews out of S3 analysis JSON.
+    visualization = analysis.pop("visualization", None)
 
     analysis_id = (
         storage.create_analysis_id()
@@ -269,12 +273,18 @@ async def analyze_image(
     return {
         **response,
         "storage": storage_result,
+        **(
+            {"visualization": visualization}
+            if visualization is not None
+            else {}
+        ),
     }
 
 
 @app.post("/analyze/video")
 def analyze_video(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    include_visualization: bool = Query(default=False),
 ):
     allowed_types = {
         "video/mp4",
@@ -327,9 +337,12 @@ def analyze_video(
         analysis = (
             video_analyzer
             .analyze_video(
-                temp_path
+                temp_path,
+                include_visualization=include_visualization,
             )
         )
+        # The overlay is returned to the requesting browser only.
+        visualization = analysis.pop("visualization", None)
 
         response = {
             "analysis_id": analysis_id,
@@ -400,6 +413,11 @@ def analyze_video(
         return {
             **response,
             "storage": storage_result,
+            **(
+                {"visualization": visualization}
+                if visualization is not None
+                else {}
+            ),
         }
 
     except ValueError as error:
