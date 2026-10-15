@@ -154,6 +154,8 @@ Docker:
     docker build -t floodlens-api:final .
     docker run --rm -p 127.0.0.1:8001:8000 floodlens-api:final
 
+**Local clean-clone verification (2026-10-15): PASS.** The developer cloned the public `main` into a fresh temporary directory, separately copied the official `best.pt`, verified its SHA-256 with `scripts/verify_official_model.py`, built the Docker image, and launched the app on localhost port 8002. The returned health status was `healthy`, `model_loaded=true`, `s3_enabled=false`, version `0.7.0`. The developer subsequently confirmed successful completion of a real video analysis in the new instance. Detailed fresh-run metrics were not captured, and this test was not another independent evaluation. See `docs/clean_clone_smoke_test.md`.
+
 Judge-accessible availability of both code **and required model weights** must be arranged; this public repository alone is not a complete executable artifact without the checkpoint.
 
 ## 10. Responsible Use and Security Limitations
@@ -178,7 +180,7 @@ A future version may improve difficult negative discrimination through larger di
 - [ ] Produce a public/unlisted judge-accessible demonstration video (maximum 5 minutes) with team identification, working system, architecture, real results, and limitations.
 - [ ] Export and review final report and architecture graphic for readability.
 - [ ] Confirm the exact Devpost submission deadline and submit early.
-- [ ] Check the final Kimi/dashboard implementation with the real API before describing it as completed.
+- [x] Verify the implemented FloodLens dashboard and segmentation preview against the real local API; user-tested on both a flood video and a challenging negative video, and the redesigned dashboard was rechecked after integration.
 
 ## Sources in this repository
 
