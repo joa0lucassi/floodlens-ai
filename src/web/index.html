@@ -12,819 +12,303 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
 
-        body {
-            font-family:
-                Inter,
-                Arial,
-                sans-serif;
-
-            background:
-                #0b1120;
-
-            color:
-                #e5e7eb;
-
-            min-height:
-                100vh;
-        }
-
-        header {
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            padding:
-                24px 40px;
-
-            border-bottom:
-                1px solid #1f2937;
-
-            background:
-                #0f172a;
-        }
-
-        .brand h1 {
-            font-size:
-                26px;
-        }
-
-        .brand span {
-            color:
-                #38bdf8;
-        }
-
-        .brand p {
-            margin-top:
-                5px;
-
-            color:
-                #94a3b8;
-
-            font-size:
-                14px;
-        }
-
-        .status {
-            padding:
-                8px 14px;
-
-            border-radius:
-                20px;
-
-            background:
-                #052e16;
-
-            color:
-                #86efac;
-
-            font-size:
-                13px;
-        }
-
-        main {
-            max-width:
-                1400px;
-
-            margin:
-                auto;
-
-            padding:
-                32px 40px;
-        }
-
-        .cards {
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    4,
-                    1fr
-                );
-
-            gap:
-                18px;
-
-            margin-bottom:
-                28px;
-        }
-
-        .card {
-            background:
-                #111827;
-
-            border:
-                1px solid #1f2937;
-
-            border-radius:
-                14px;
-
-            padding:
-                22px;
-        }
-
-        .card-title {
-            color:
-                #94a3b8;
-
-            font-size:
-                13px;
-
-            margin-bottom:
-                12px;
-        }
-
-        .card-value {
-            font-size:
-                27px;
-
-            font-weight:
-                700;
-        }
-
-        .card-subtitle {
-            margin-top:
-                7px;
-
-            font-size:
-                12px;
-
-            color:
-                #64748b;
-        }
-
-        .grid {
-            display:
-                grid;
-
-            grid-template-columns:
-                minmax(0, 2fr) minmax(0, 1fr);
-
-            gap:
-                20px;
-
-            margin-bottom:
-                28px;
-        }
-
-        .panel {
-            background:
-                #111827;
-
-            border:
-                1px solid #1f2937;
-
-            border-radius:
-                14px;
-
-            padding:
-                22px;
-        }
-
-        .panel h2 {
-            font-size:
-                17px;
-
-            margin-bottom:
-                20px;
-        }
-
-        .risk-box {
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            flex-direction:
-                column;
-
-            height:
-                260px;
-        }
-
-        .risk-value {
-            font-size:
-                32px;
-
-            font-weight:
-                800;
-
-            margin-bottom:
-                12px;
-        }
-
-        .risk-description {
-            color:
-                #94a3b8;
-
-            text-align:
-                center;
-
-            line-height:
-                1.5;
-        }
-
-        table {
-            width:
-                100%;
-
-            border-collapse:
-                collapse;
-        }
-
-        th,
-        td {
-            padding:
-                14px;
-
-            text-align:
-                left;
-
-            border-bottom:
-                1px solid #1f2937;
-
-            font-size:
-                13px;
-        }
-
-        th {
-            color:
-                #94a3b8;
-
-            font-weight:
-                500;
-        }
-
-        .badge {
-            display:
-                inline-block;
-
-            padding:
-                5px 9px;
-
-            border-radius:
-                8px;
-
-            font-size:
-                11px;
-        }
-
-        .badge-video {
-            background:
-                #172554;
-
-            color:
-                #93c5fd;
-        }
-
-        .badge-image {
-            background:
-                #082f49;
-
-            color:
-                #7dd3fc;
-        }
-
-        .badge-moderate {
-            background:
-                #422006;
-
-            color:
-                #facc15;
-        }
-
-        .badge-stable {
-            background:
-                #052e16;
-
-            color:
-                #86efac;
-        }
-
-        .empty {
-            color:
-                #64748b;
-
-            text-align:
-                center;
-
-            padding:
-                30px;
-        }
-
-        footer {
-            margin-top:
-                30px;
-
-            color:
-                #475569;
-
-            text-align:
-                center;
-
-            font-size:
-                12px;
-        }
-
-        @media (
-            max-width: 900px
-        ) {
-            .cards {
-                grid-template-columns:
-                    repeat(
-                        2,
-                        1fr
-                    );
-            }
-
-            .grid {
-                grid-template-columns:
-                    1fr;
-            }
-        }
-
-        @media (
-            max-width: 600px
-        ) {
-            header,
-            main {
-                padding:
-                    20px;
-            }
-
-            .cards {
-                grid-template-columns:
-                    1fr;
-            }
-        }
-
-        .timeline-chart-frame {
-            position: relative;
-            width: 100%;
-            height: 280px;
-            min-width: 0;
-        }
-
-        .timeline-chart-frame[hidden] {
-            display: none;
-        }
-
-        /* Local and cloud analysis workspace */
-        .status.local {
-            background: #12273b;
-            color: #93c5fd;
-        }
-
-        .status.error {
-            background: #3b1720;
-            color: #fda4af;
-        }
-
-        .upload-panel {
-            margin-bottom: 26px;
-            border: 1px solid #25425e;
-            background: linear-gradient(115deg, #12213b, #101827 65%);
-        }
-
-        .eyebrow {
-            color: #38bdf8;
-            letter-spacing: .12em;
-            font-weight: 700;
-            font-size: 11px;
-            margin-bottom: 10px;
-        }
-
-        .upload-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .upload-header h2 {
-            font-size: 21px;
-            margin-bottom: 7px;
-        }
-
-        .muted {
-            color: #94a3b8;
-            line-height: 1.55;
-            font-size: 13px;
-        }
-
-        .upload-form {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .file-input {
-            flex: 1;
-            min-width: 235px;
-            max-width: 650px;
-            padding: 12px;
-            border: 1px dashed #486581;
-            border-radius: 9px;
-            background: #0c172a;
-            color: #e2e8f0;
-            font: inherit;
-            font-size: 13px;
-        }
-
-        .file-input::file-selector-button {
-            border: 0;
-            background: #203855;
-            color: #dbeafe;
-            padding: 8px 10px;
-            border-radius: 6px;
-            margin-right: 12px;
-            cursor: pointer;
-        }
-
-        .primary-button {
-            background: #38bdf8;
-            color: #082032;
-            padding: 14px 19px;
-            border: none;
-            border-radius: 9px;
-            font: inherit;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .primary-button:disabled {
-            opacity: .6;
-            cursor: wait;
-        }
-
-        .upload-feedback {
-            min-height: 21px;
-            margin-top: 12px;
-            color: #94a3b8;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .upload-feedback.error {
-            color: #fda4af;
-        }
-
-        .preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
-            gap: 18px;
-            align-items: start;
-            margin-top: 12px;
-        }
-
-        .preview-media {
-            display: block;
-            max-width: 100%;
-            max-height: 310px;
-            border-radius: 9px;
-            background: #050b17;
-        }
-
-        .segmentation-result[hidden] {
-            display: none;
-        }
-
-        .segmentation-result {
-            min-width: 0;
-            border: 1px solid #25425e;
-            border-radius: 9px;
-            padding: 10px;
-            background: #081627;
-        }
-
-        .segmentation-result img {
-            display: block;
-            width: 100%;
-            max-height: 310px;
-            object-fit: contain;
-            border-radius: 5px;
-            background: #050b17;
-        }
-
-        .segmentation-result figcaption {
-            margin-top: 8px;
-            color: #94a3b8;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .live-pill {
-            border: 1px solid #334b65;
-            border-radius: 999px;
-            padding: 7px 11px;
-            color: #94a3b8;
-            white-space: nowrap;
-            font-size: 11px;
-        }
-
-        .section-note {
-            color: #64748b;
-            font-size: 12px;
-            line-height: 1.5;
-            margin: 8px 0 16px;
-        }
-
-        .risk-value {
-            overflow-wrap: anywhere;
-        }
-
-        .risk-description {
-            max-width: 300px;
-        }
-
-        .summary-note {
-            color: #94a3b8;
-            line-height: 1.55;
-            margin-top: 14px;
-            font-size: 12px;
-        }
-
-        .history-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .table-scroll {
-            overflow-x: auto;
-        }
-
-        @media (max-width: 600px) {
-            .timeline-chart-frame {
-                height: 220px;
-            }
-
-            .upload-header {
-                flex-direction: column;
-            }
-
-            .file-input,
-            .primary-button {
-                width: 100%;
-                max-width: none;
-            }
-        }
-
-    </style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root {
+  color-scheme:dark;
+  --bg:#07111f; --surface:#0e1d30; --surface2:#112239; --surface3:#152940;
+  --line:#213650; --line-strong:#315272;
+  --text:#e9f4ff; --muted:#9baec6; --subtle:#7390ad;
+  --blue:#47c8f2; --blue2:#7dd9ff; --green:#7ce4ba; --amber:#f7c47c; --red:#fb9eaa;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; min-height:100vh; background:var(--bg); color:var(--text);font:14px/1.55 'DM Sans','Segoe UI',Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--blue2);outline-offset:3px}
+a{color:inherit;text-decoration:none}
+[hidden]{display:none!important}
+.shell{display:grid;grid-template-columns:246px minmax(0,1fr);min-height:100vh}
+.sidebar{
+ position:sticky;top:0;height:100vh;padding:28px 19px 20px;
+ display:flex;flex-direction:column;gap:32px;background:#091626;
+ border-right:1px solid #1c3049;
+}
+.identity{display:flex;align-items:center;gap:12px;padding:4px 7px}
+.brand-mark{
+ width:41px;height:41px;flex:none;border-radius:12px;position:relative;
+ background:linear-gradient(140deg,#0d4967,#15334d);border:1px solid #367ba4;
+ display:grid;place-items:center;box-shadow:inset 0 0 0 4px rgba(48,153,199,.06);
+}
+.brand-mark::before{content:"";width:21px;height:21px;border:2px solid #56d3ff;border-radius:50%;position:absolute}
+.brand-mark::after{content:"";width:5px;height:5px;background:#b9efff;border-radius:50%;position:absolute;box-shadow:0 0 0 4px #13405a}
+.brand-name{font:800 17px/1.2 Manrope,'Segoe UI',sans-serif;letter-spacing:-.5px}
+.brand-name b{color:var(--blue);font-weight:800}
+.brand-sub{margin-top:3px;color:var(--subtle);font-size:10px;letter-spacing:.10em;text-transform:uppercase}
+.nav-label,.eyebrow,.micro{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.nav-label{color:#6485a3;margin:0 0 12px 14px}
+.nav-links{display:grid;gap:5px}
+.nav-link{display:flex;align-items:center;gap:12px;border:1px solid transparent;padding:11px 13px;border-radius:10px;font-weight:600;color:#8ea7c2;transition:.18s}
+.nav-link:hover{background:#10243a;color:#e9f4ff}
+.nav-link.active{background:#112f47;border-color:#234b68;color:#9feaff}
+.nav-glyph{font-size:17px;font-weight:400;width:22px;text-align:center;line-height:1}
+.sidebar-bottom{margin-top:auto;display:grid;gap:12px}
+.sidebar-note{border:1px solid #213c55;background:linear-gradient(155deg,#0c273d,#0c1e32);border-radius:12px;padding:15px}
+.sidebar-note .micro{color:var(--blue)}
+.sidebar-note p{font-size:12px;color:#a9bfd3;line-height:1.6;margin:8px 0 0}
+.sidebar-footer{font-size:11px;color:#6785a2;padding-left:9px}
+.content{min-width:0;padding:0 clamp(20px,3.5vw,54px) 36px;max-width:1690px;width:100%;margin:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:89px;border-bottom:1px solid #1b3048;margin-bottom:31px}
+.breadcrumb{display:flex;align-items:center;gap:10px;color:#7996b2;font-weight:600;font-size:13px}
+.breadcrumb strong{color:#dcecff;font-weight:700}
+.breadcrumb .slash{color:#46627c}
+.status{display:inline-flex;align-items:center;gap:8px;border:1px solid #24684e;background:#0d302a;border-radius:100px;padding:9px 13px;font:700 11px/1.1 Manrope,sans-serif;letter-spacing:.03em;color:#8ce8c6;white-space:nowrap}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}
+.status.local{background:#102d41;border-color:#245474;color:#86ddff}
+.status.error{background:#3a1e2d;border-color:#7b3d4d;color:#ffb0ba}
+.hero{
+ display:grid;grid-template-columns:minmax(0,1fr) 290px;position:relative;overflow:hidden;
+ min-height:183px;background:linear-gradient(112deg,#0e2c47 0%,#0c2239 56%,#102d43 100%);
+ border:1px solid #2b5271;border-radius:18px;padding:29px 32px;margin-bottom:25px;
+}
+.hero::before{content:"";position:absolute;width:480px;height:480px;right:-60px;top:-210px;border-radius:50%;
+ background:repeating-radial-gradient(circle,transparent 0 48px,rgba(85,185,227,.09) 49px 50px);pointer-events:none}
+.hero::after{content:"";position:absolute;width:230px;height:230px;right:75px;top:-100px;
+ background:radial-gradient(circle,rgba(52,183,229,.2),transparent 65%);pointer-events:none}
+.hero-inner{position:relative;z-index:1}
+.eyebrow{color:#70d7ff;display:flex;gap:8px;align-items:center}
+.eyebrow::before{content:"";width:18px;height:2px;background:currentColor}
+h1,h2,h3,p{margin-top:0}
+.hero h1{font:800 clamp(23px,2.5vw,34px)/1.2 Manrope,'Segoe UI',sans-serif;letter-spacing:-1.1px;margin:15px 0 9px}
+.hero p{font-size:14px;color:#a8c1d8;max-width:625px;line-height:1.7;margin:0}
+.hero-side{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:11px}
+.process-tag{display:flex;align-items:center;gap:10px;color:#cbeeff;background:#113753a8;border:1px solid #2a5876;
+ padding:9px 12px;border-radius:8px;font:700 11px Manrope,sans-serif;min-width:190px}
+.process-tag span{color:var(--blue2);font-weight:800}
+.section-top{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px}
+.section-title{font:800 19px/1.3 Manrope,'Segoe UI',sans-serif;letter-spacing:-.5px;margin:0}
+.section-note{font-size:12px;color:var(--muted);line-height:1.6;margin:4px 0 0}
+.section-index{font-size:11px;font-weight:700;letter-spacing:.13em;color:#6d92b1;text-transform:uppercase}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:32px}
+.card,.panel{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.card{padding:19px 20px 18px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;top:0;left:22px;right:22px;height:2px;background:linear-gradient(90deg,#238cbb,transparent);opacity:.8}
+.card-title{font:700 10px/1.3 Manrope,'Segoe UI',sans-serif;letter-spacing:.12em;color:#92aec8}
+.card-value{font:800 clamp(21px,2vw,27px)/1.25 Manrope,'Segoe UI',sans-serif;letter-spacing:-.7px;margin-top:18px;overflow-wrap:anywhere}
+.card-subtitle{font-size:11px;color:#7896b1;margin-top:7px;line-height:1.5}
+.card:nth-child(3) .card-value{color:#a2eaff}
+.panel{padding:23px}
+.upload-panel{padding:0;overflow:hidden;margin-bottom:20px;border-color:#2a4563}
+.upload-header{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:22px 24px 16px}
+.upload-header h2{font:800 20px Manrope,'Segoe UI',sans-serif;letter-spacing:-.5px;margin:5px 0 3px}
+.upload-header p{margin:0;max-width:730px}
+.live-pill{white-space:nowrap;color:#91cce8;background:#112f43;border:1px solid #28536c;border-radius:100px;padding:7px 11px;font-size:11px}
+.upload-controls{background:#101f33;border-top:1px solid #1c3751;border-bottom:1px solid #1c3751;padding:19px 24px}
+.upload-form{display:flex;align-items:center;gap:12px}
+.upload-label{font-weight:700;font-size:12px;color:#cbddef;flex:none}
+.file-input{width:100%;min-width:0;flex:1;border:1px dashed #3e6584;background:#08182a;color:#bed0e2;border-radius:9px;padding:9px;font-size:12px}
+.file-input::file-selector-button{background:#24425b;border:0;border-radius:6px;padding:10px 12px;color:#e5f2ff;cursor:pointer;font-weight:700;margin-right:10px}
+.primary-button{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#53c9f2;color:#082037;border:1px solid #6fd7ff;border-radius:9px;
+ padding:13px 19px;font:800 12px Manrope,'Segoe UI',sans-serif;white-space:nowrap;min-height:43px}
+.primary-button:hover{background:#84ddfb}
+.primary-button:disabled{opacity:.55;cursor:wait}
+.upload-feedback{margin:12px 0 0;min-height:21px;font-size:12px;color:#9ebbd5;line-height:1.5}
+.upload-feedback.error{color:#ffafb7}
+.preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;padding:21px 24px 23px}
+.media-card{background:#09182a;border:1px solid #23405d;border-radius:12px;overflow:hidden;min-width:0}
+.media-head{min-height:47px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #1f3a52}
+.media-head strong{font:800 11px Manrope,'Segoe UI',sans-serif;letter-spacing:.08em;color:#c8e8f9;text-transform:uppercase}
+.media-counter{font:600 11px 'DM Sans',sans-serif;color:#76a4c4}
+.media-viewport{aspect-ratio:16/9;width:100%;background:#050e1b;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.preview-media,.segmentation-result,.segmentation-result img{width:100%;height:100%;max-width:100%;max-height:100%;display:block;object-fit:contain}
+.segmentation-result{margin:0}
+.media-empty{color:#6886a4;text-align:center;padding:20px;font-size:12px}
+.media-empty .empty-icon{width:48px;height:48px;border:1px dashed #315577;border-radius:13px;display:grid;place-items:center;font-size:23px;color:#6794b2;margin:0 auto 10px}
+.media-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0;padding:12px 14px;border-top:1px solid #1f3a52;min-height:54px;color:#89a8c1;font-size:11px;line-height:1.5}
+.media-foot p{margin:0}
+.ghost-button{background:#16344c;color:#aee9ff;border:1px solid #315b78;border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap}
+.ghost-button:hover{background:#21445e}
+.research-note{margin:0;padding:13px 24px;background:#0b1b2d;border-top:1px solid #1e354c;color:#849fb9;font-size:11px;line-height:1.65}
+.research-note strong{color:#c5d8e8}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:17px;margin-bottom:20px}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.panel-heading h2{font:800 17px Manrope,'Segoe UI',sans-serif;letter-spacing:-.4px;margin:0}
+.panel-sub{font-size:11px;color:#7f9eb8}
+.timeline-chart-frame{height:260px;position:relative;min-width:0}
+.timeline-placeholder{height:260px;display:grid;place-items:center;color:#6886a4;text-align:center;font-size:12px;border:1px dashed #2b455c;background:#0b1a2b;border-radius:10px;padding:18px}
+.assessment-main{display:flex;align-items:flex-start;flex-direction:column;gap:8px;padding:15px 16px;background:#10243a;border:1px solid #284561;border-radius:11px}
+.assessment-label{font:800 10px Manrope,sans-serif;color:#8ea8be;letter-spacing:.12em;text-transform:uppercase}
+.risk-value{font:800 clamp(22px,2.3vw,29px)/1.28 Manrope,'Segoe UI',sans-serif;overflow-wrap:anywhere;letter-spacing:-.5px;color:#d8edfb}
+.risk-value.confirmed{color:#82e3b9}
+.risk-value.not-confirmed{color:#9fcce8}
+.risk-value.insufficient{color:var(--amber)}
+.risk-description{font-size:12px;color:#adc4d8;line-height:1.65;margin:0}
+.details-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+.detail{min-width:0;border-radius:9px;border:1px solid #243d56;padding:12px;background:#0b1b2d}
+.detail .label{color:#84a1bc;font-size:11px;display:block}
+.detail .value{display:block;font:800 17px/1.3 Manrope,sans-serif;margin-top:7px;overflow-wrap:anywhere}
+.fineprint{font-size:11px;color:#7996b2;line-height:1.6;margin-top:13px}
+.history-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}
+.history-heading h2{font:800 17px Manrope,sans-serif;letter-spacing:-.3px;margin:0}
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:650px}
+th{text-align:left;color:#7796b1;font:700 10px Manrope,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:13px 11px;border-bottom:1px solid #2a425b}
+td{font-size:12px;color:#bbd0e3;padding:15px 11px;border-bottom:1px solid #1f354d;vertical-align:middle}
+tbody tr:hover{background:#12263c}
+tbody tr:last-child td{border-bottom:0}
+.empty{color:#829eb9;text-align:center;padding:28px}
+.footer{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:25px 3px 5px;color:#7694ac;font-size:11px}
+.footer a{color:#9fe4ff;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:1170px){.shell{grid-template-columns:205px minmax(0,1fr)}.hero{grid-template-columns:minmax(0,1fr) 200px;padding:23px}.hero-side{gap:8px}.process-tag{min-width:150px}.preview-grid{padding:17px}}
+@media(max-width:990px){.shell{display:block}.sidebar{position:static;height:auto;padding:13px 20px;display:block}.identity{display:inline-flex}.nav-label,.nav-links,.sidebar-bottom{display:none}.content{padding:0 22px 35px}.topbar{min-height:65px;margin-bottom:24px}}
+@media(max-width:750px){.hero{grid-template-columns:1fr;padding:24px;gap:17px}.hero-side{display:flex;flex-direction:row;justify-content:flex-start;align-items:stretch;flex-wrap:wrap}.process-tag{min-width:0}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.preview-grid{grid-template-columns:1fr}.media-viewport{aspect-ratio:16/9}.upload-form{flex-wrap:wrap}.upload-label{width:100%}.file-input{min-width:100%;flex-basis:100%}.primary-button{width:100%}}
+@media(max-width:480px){.sidebar{padding:11px 13px}.content{padding:0 13px 24px}.topbar{gap:8px}.breadcrumb{font-size:11px}.status{font-size:9px;padding:8px}.hero{padding:18px}.hero h1{font-size:23px}.process-tag{font-size:10px}.cards{gap:10px}.card{padding:15px 13px}.card-title{font-size:9px}.card-value{font-size:20px}.panel{padding:16px}.upload-panel{padding:0}.upload-header,.preview-grid,.upload-controls{padding:16px}.research-note{padding:12px 16px}.timeline-chart-frame,.timeline-placeholder{height:215px}.footer{display:block}.footer a{display:inline-block;margin-top:5px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+</style>
 </head>
 
 <body>
 
-<header>
-    <div class="brand">
-        <h1>
-            FloodLens <span>AI</span>
-        </h1>
-
-        <p>
-            Intelligent Urban Flood Monitoring
-        </p>
+<div class="shell">
+ <aside class="sidebar" aria-label="Main navigation">
+  <div class="identity">
+   <div class="brand-mark" aria-hidden="true"></div>
+   <div><div class="brand-name">FloodLens <b>AI</b></div><div class="brand-sub">Vision intelligence</div></div>
+  </div>
+  <nav aria-label="Sections">
+   <div class="nav-label">Workspace</div>
+   <div class="nav-links">
+    <a class="nav-link active" href="#overview"><span class="nav-glyph" aria-hidden="true">◫</span> Overview</a>
+    <a class="nav-link" href="#workspace"><span class="nav-glyph" aria-hidden="true">◎</span> Visual analysis</a>
+    <a class="nav-link" href="#analytics"><span class="nav-glyph" aria-hidden="true">⌁</span> Analytics</a>
+    <a class="nav-link" href="#history"><span class="nav-glyph" aria-hidden="true">▤</span> Analysis history</a>
+   </div>
+  </nav>
+  <div class="sidebar-bottom">
+   <div class="sidebar-note">
+    <div class="micro">Research prototype</div>
+    <p>Computer vision for assessing potentially flooded road scenes. All metrics come from actual model results.</p>
+   </div>
+   <div class="sidebar-footer">OpenCV · YOLO11 · FastAPI</div>
+  </div>
+ </aside>
+ <div class="content">
+  <header class="topbar">
+   <div class="breadcrumb"><span>FloodLens AI</span><span class="slash">/</span><strong>Monitoring overview</strong></div>
+   <div class="status local" id="systemStatus" role="status" aria-live="polite">Checking API</div>
+  </header>
+  <main>
+   <section class="hero" id="overview">
+    <div class="hero-inner">
+     <div class="eyebrow">Urban flood intelligence</div>
+     <h1>See beyond the surface.</h1>
+     <p>Analyze real road footage, visualize AI-predicted flood regions, and assess how detections persist over time.</p>
     </div>
-
-    <div
-        class="status"
-        id="systemStatus"
-    >
-        ● Checking API...
+    <div class="hero-side" aria-label="Analysis pipeline">
+     <div class="process-tag"><span>01</span> Video input</div>
+     <div class="process-tag"><span>02</span> AI segmentation</div>
+     <div class="process-tag"><span>03</span> Temporal verification</div>
     </div>
-</header>
-
-<main>
-
-    <section class="panel upload-panel" aria-labelledby="analyzeTitle">
-        <div class="upload-header">
-            <div>
-                <div class="eyebrow">LIVE ANALYSIS</div>
-                <h2 id="analyzeTitle">Analyze a street scene</h2>
-                <p class="muted">
-                    Select an image or video. The model runs through the FloodLens API.
-                    Short clips work best for CPU-based demonstrations.
-                </p>
-            </div>
-            <span class="live-pill" id="storageMode">Checking storage...</span>
-        </div>
-
-        <form class="upload-form" id="analysisForm">
-            <label for="mediaFile" class="muted">Image or video</label>
-            <input
-                class="file-input"
-                id="mediaFile"
-                name="file"
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.avi,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-msvideo"
-                required
-            >
-            <button class="primary-button" id="runButton" type="submit">
-                Analyze file
-            </button>
-        </form>
-        <p id="uploadFeedback" class="upload-feedback" role="status" aria-live="polite">
-            No file selected.
-        </p>
-        <div class="preview-grid">
-            <div id="mediaPreview"></div>
-            <figure id="segmentationResult" class="segmentation-result" hidden>
-                <img id="segmentationImage" alt="AI segmentation mask overlay on a sampled frame">
-                <figcaption id="segmentationCaption"></figcaption>
-            </figure>
-        </div>
-        <p class="section-note">
-            Experimental flood monitoring prototype. Visual image area is not water depth,
-            and reflective streets can produce false alarms.
-        </p>
-    </section>
-
-    <section class="cards">
-
-        <div class="card">
-            <div class="card-title">
-                TOTAL ANALYSES
-            </div>
-
-            <div
-                class="card-value"
-                id="totalAnalyses"
-            >
-                -
-            </div>
-
-            <div class="card-subtitle">
-                <span id="analysesSubtitle">Loading analysis history...</span>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                LATEST RISK
-            </div>
-
-            <div
-                class="card-value"
-                id="latestRisk"
-            >
-                -
-            </div>
-
-            <div class="card-subtitle">
-                Risk Engine classification
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                FLOODED AREA
-            </div>
-
-            <div
-                class="card-value"
-                id="floodedArea"
-            >
-                -
-            </div>
-
-            <div class="card-subtitle">
-                Latest video analysis
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                TREND
-            </div>
-
-            <div
-                class="card-value"
-                id="trend"
-            >
-                -
-            </div>
-
-            <div class="card-subtitle">
-                Temporal flood analysis
-            </div>
-        </div>
-
-    </section>
-
-
-    <section class="grid">
-
-        <div class="panel">
-
-            <h2>
-                Flooded Area Timeline
-            </h2>
-            <p class="section-note" id="timelineHint">Upload a video to view the sampled timeline.</p>
-
-            <div id="timelineChartFrame" class="timeline-chart-frame" hidden>
-                <canvas id="timelineChart"></canvas>
-            </div>
-
-        </div>
-
-        <div class="panel">
-
-            <h2>
-                Current Assessment
-            </h2>
-
-            <div class="risk-box">
-
-                <div
-                    class="risk-value"
-                    id="riskDisplay"
-                >
-                    -
-                </div>
-
-                <div
-                    class="risk-description"
-                    id="riskDescription"
-                >
-                    Waiting for analysis data.
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <section class="panel">
-
-        <div class="history-heading">
-            <h2>Analysis History</h2>
-            <span class="section-note" id="historyMode">Session results</span>
-        </div>
-        <div class="table-scroll"><table>
-
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>File</th>
-                    <th>Flood Area</th>
-                    <th>Risk</th>
-                    <th>Trend</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-
-            <tbody id="historyTable">
-
-                <tr>
-                    <td
-                        colspan="6"
-                        class="empty"
-                    >
-                        No analyses yet. Upload a file to begin.
-                    </td>
-                </tr>
-
-            </tbody>
-
-        </table></div>
-
-    </section>
-
-
-    <footer>
-        FloodLens AI · OpenCV + YOLO + AWS ·
-        <a
-            href="https://github.com/joa0lucassi/floodlens-ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color: #7dd3fc; text-decoration: underline; text-underline-offset: 3px;"
-        >Source code (AGPL-3.0)</a>
-    </footer>
-
-</main>
-
+   </section>
+   <div class="section-top">
+    <div><h2 class="section-title">Monitoring overview</h2><p class="section-note">Latest real analysis results — no simulated statistics.</p></div>
+    <span class="section-index">01 / Overview</span>
+   </div>
+   <section class="cards" aria-label="Analysis metrics">
+    <div class="card"><div class="card-title">TOTAL ANALYSES</div><div class="card-value" id="totalAnalyses">0</div><div class="card-subtitle" id="analysesSubtitle">Current browser session</div></div>
+    <div class="card"><div class="card-title">LATEST RISK</div><div class="card-value" id="latestRisk">—</div><div class="card-subtitle">Experimental assessment</div></div>
+    <div class="card"><div class="card-title">SEGMENTED IMAGE AREA</div><div class="card-value" id="floodedArea">—</div><div class="card-subtitle">Not a water-depth measurement</div></div>
+    <div class="card"><div class="card-title">AREA TREND</div><div class="card-value" id="trend">—</div><div class="card-subtitle">Change between sampled frames</div></div>
+   </section>
+   <section id="workspace" aria-labelledby="analyzeTitle">
+    <div class="section-top">
+     <div><h2 class="section-title">Visual analysis workspace</h2><p class="section-note">Original footage and the model's segmentation side by side.</p></div>
+     <span class="section-index">02 / Detection</span>
+    </div>
+    <div class="panel upload-panel">
+     <div class="upload-header">
+      <div><div class="eyebrow">Computer vision</div><h2 id="analyzeTitle">Analyze a road scene</h2><p class="section-note">Upload a recorded MP4, MOV, AVI, JPEG, PNG or WebP. Processing runs on your API; CPU video analysis may take time.</p></div>
+      <span class="live-pill" id="storageMode">Checking storage…</span>
+     </div>
+     <div class="upload-controls">
+      <form class="upload-form" id="analysisForm">
+       <label for="mediaFile" class="upload-label">Your file</label>
+       <input class="file-input" id="mediaFile" name="file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.avi,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-msvideo" required>
+       <button class="primary-button" id="runButton" type="submit">Analyze footage <span aria-hidden="true">↗</span></button>
+      </form>
+      <p id="uploadFeedback" class="upload-feedback" role="status" aria-live="polite">Choose a file to start your first analysis.</p>
+     </div>
+     <div class="preview-grid">
+      <article class="media-card" aria-label="Original uploaded media">
+       <div class="media-head"><strong>01 / Original footage</strong><span class="media-counter">Input</span></div>
+       <div class="media-viewport" id="mediaPreview">
+        <div class="media-empty"><span class="empty-icon" aria-hidden="true">▷</span>Select an image or video to preview</div>
+       </div>
+       <div class="media-foot"><p>Your original, unmodified upload.</p></div>
+      </article>
+      <article class="media-card" aria-label="AI-generated segmentation preview">
+       <div class="media-head"><strong>02 / Predicted segmentation</strong><span class="media-counter">YOLO11-seg</span></div>
+       <div class="media-viewport">
+        <div class="media-empty" id="maskEmpty"><span class="empty-icon" aria-hidden="true">⌗</span>Run an analysis to reveal predicted regions</div>
+        <figure id="segmentationResult" class="segmentation-result" hidden>
+         <img id="segmentationImage" alt="Cyan overlay over AI-predicted flood region">
+        </figure>
+       </div>
+       <div class="media-foot"><p id="segmentationCaption">Cyan overlay represents a model prediction, not verified water.</p><button id="jumpToFrame" type="button" class="ghost-button" hidden>Match frame ↗</button></div>
+      </article>
+     </div>
+     <p class="research-note"><strong>Research note:</strong> Segmented image area is not water depth. Reflections, rain and wet pavement can produce false positives. A blue region alone does not mean a confirmed flood.</p>
+    </div>
+   </section>
+   <section id="analytics" aria-label="Temporal analysis">
+    <div class="section-top">
+     <div><h2 class="section-title">Temporal intelligence</h2><p class="section-note">Understand detection persistence and experimental risk.</p></div>
+     <span class="section-index">03 / Assessment</span>
+    </div>
+    <div class="grid">
+     <section class="panel" aria-labelledby="timelineTitle">
+      <div class="panel-heading"><h2 id="timelineTitle">Flooded area over time</h2><span class="panel-sub">1 sample / second</span></div>
+      <p class="section-note" id="timelineHint">Upload a video to view the sampled timeline.</p>
+      <div id="timelineChartFrame" class="timeline-chart-frame" hidden><canvas id="timelineChart" aria-label="Area over time chart"></canvas></div>
+      <div class="timeline-placeholder" id="timelineEmpty">Upload a video to see how the estimated segmented area changes across sampled frames.</div>
+     </section>
+     <section class="panel" aria-labelledby="verdictTitle">
+      <div class="panel-heading"><h2 id="verdictTitle">Current assessment</h2><span class="panel-sub">Temporal rule · 3 of 5</span></div>
+      <div class="assessment-main">
+       <span class="assessment-label">Temporal verdict</span>
+       <div class="risk-value" id="riskDisplay">—</div>
+       <p class="risk-description" id="riskDescription">Waiting for a video or image analysis.</p>
+      </div>
+      <div class="details-grid">
+       <div class="detail"><span class="label">Samples analyzed</span><span class="value" id="sampleCount">—</span></div>
+       <div class="detail"><span class="label">Confirmed windows</span><span class="value" id="confirmedWindows">—</span></div>
+       <div class="detail"><span class="label">First confirmation</span><span class="value" id="firstConfirmation">—</span></div>
+       <div class="detail"><span class="label">Model confidence</span><span class="value" id="confidenceDisplay">—</span></div>
+      </div>
+      <p class="fineprint">A confirmed result reflects the algorithm's temporal rule, not independent physical verification of a flood.</p>
+     </section>
+    </div>
+   </section>
+   <section class="panel" id="history" aria-labelledby="historyTitle">
+    <div class="history-heading">
+     <div><h2 id="historyTitle">Analysis history</h2><p class="section-note">Metadata from this browser session and S3 when available.</p></div>
+     <span class="live-pill" id="historyMode">Browser session only</span>
+    </div>
+    <div class="table-scroll"><table>
+     <thead><tr><th>Type</th><th>File</th><th>Area</th><th>Assessment / Risk</th><th>Trend</th><th>Analyzed at</th></tr></thead>
+     <tbody id="historyTable"><tr><td colspan="6" class="empty">No analyses yet. Upload a file to begin.</td></tr></tbody>
+    </table></div>
+   </section>
+  </main>
+  <footer class="footer">
+   <span>© 2026 FloodLens AI · Experimental computer vision research</span>
+   <span>OpenCV 5 · YOLO11 · AWS · <a href="https://github.com/joa0lucassi/floodlens-ai" target="_blank" rel="noopener noreferrer">View source (AGPL-3.0) ↗</a></span>
+  </footer>
+ </div>
+</div>
 
 <script>
     "use strict";
@@ -898,17 +382,22 @@
         if (timeline.length === 0) {
             hint.textContent = "Upload a video to view the sampled timeline.";
             frame.hidden = true;
+            el("timelineEmpty").hidden = false;
             return;
         }
 
         frame.hidden = false;
+        el("timelineEmpty").hidden = true;
         hint.textContent =
             "Estimated segmented image area (not physical water depth). "
             + timeline.length + " sampled frames.";
 
         if (typeof Chart === "undefined") {
             frame.hidden = true;
-            hint.textContent += " Chart unavailable: Chart.js could not load.";
+            el("timelineEmpty").hidden = false;
+            const lines = timeline.map((p) => p.time_seconds + "s: " + p.flooded_area_percent + "%");
+            el("timelineEmpty").textContent = "Chart unavailable. Samples — " + lines.join(" · ");
+            hint.textContent += " Chart.js could not load.";
             return;
         }
 
@@ -954,6 +443,11 @@
 
     function renderAssessment(analysis) {
         if (!analysis) {
+            setText("sampleCount", "—");
+            setText("confirmedWindows", "—");
+            setText("firstConfirmation", "—");
+            setText("confidenceDisplay", "—");
+            el("riskDisplay").className = "risk-value";
             setText("latestRisk", "-");
             setText("floodedArea", "-");
             setText("trend", "-");
@@ -968,6 +462,14 @@
             const temporal = analysis.temporal || {};
             const status = temporal.status || "UNKNOWN";
 
+            setText("sampleCount", analysis.video && analysis.video.samples_analyzed);
+            setText("confirmedWindows", temporal.confirmed_windows);
+            setText("firstConfirmation", temporal.first_confirmation_seconds == null ? "—" : String(temporal.first_confirmation_seconds) + "s");
+            setText("confidenceDisplay", risk.average_confidence == null ? "—" : Number(risk.average_confidence).toFixed(2));
+            el("riskDisplay").className = "risk-value "
+                + (status === "CONFIRMED" ? "confirmed"
+                : status === "INSUFFICIENT_DATA" ? "insufficient"
+                : "not-confirmed");
             setText("latestRisk", risk.risk_level || "NOT ASSESSED");
             setText(
                 "floodedArea",
@@ -994,6 +496,11 @@
             );
         } else {
             const positive = Boolean(analysis.flood_detected);
+            setText("sampleCount", "1");
+            setText("confirmedWindows", "Not applicable");
+            setText("firstConfirmation", "—");
+            setText("confidenceDisplay", analysis.max_confidence == null ? "—" : Number(analysis.max_confidence).toFixed(2));
+            el("riskDisplay").className = "risk-value not-confirmed";
             setText("latestRisk", "NOT ASSESSED");
             setText(
                 "floodedArea",
@@ -1169,8 +676,12 @@
 
     function clearSegmentationPreview() {
         el("segmentationResult").hidden = true;
+        el("segmentationResult").dataset.timeSeconds = "";
+        el("maskEmpty").hidden = false;
+        el("jumpToFrame").hidden = true;
         el("segmentationImage").removeAttribute("src");
-        el("segmentationCaption").textContent = "";
+        el("segmentationCaption").textContent =
+            "Cyan overlay represents a model prediction, not verified water.";
     }
 
     function showSegmentationPreview(visualization, kind) {
@@ -1182,6 +693,7 @@
         }
 
         el("segmentationImage").src = visualization.image_data_url;
+        el("segmentationResult").dataset.timeSeconds = visualization.time_seconds == null ? "" : String(visualization.time_seconds);
         const time = Number(visualization.time_seconds);
         const sample = kind === "video" && Number.isFinite(time)
             ? "Sampled frame at " + time.toFixed(1) + "s (largest predicted area). "
@@ -1190,6 +702,8 @@
             + "Cyan indicates model-predicted flood regions, not verified water or water depth. "
             + "Preview is not saved to S3.";
         el("segmentationResult").hidden = false;
+        el("maskEmpty").hidden = true;
+        el("jumpToFrame").hidden = !(kind === "video" && Number.isFinite(time));
     }
 
     function previewSelectedFile() {
@@ -1226,6 +740,7 @@
         media.className = "preview-media";
         media.setAttribute("aria-label", "Selected file preview");
 
+        media.id = "uploadedMedia";
         if (kind === "video") {
             media.controls = true;
             media.preload = "metadata";
@@ -1248,7 +763,7 @@
         const message = el("uploadFeedback");
         clearSegmentationPreview();
         button.disabled = true;
-        button.textContent = "Analyzing...";
+        button.textContent = "Analyzing…";
         message.classList.remove("error");
         message.textContent =
             "Uploading and processing " + file.name
@@ -1305,10 +820,20 @@
             message.textContent = "Analysis failed: " + error.message;
         } finally {
             button.disabled = false;
-            button.textContent = "Analyze file";
+            button.textContent = "Analyze footage ↗";
         }
     }
 
+    el("jumpToFrame").addEventListener("click", () => {
+        const video = el("uploadedMedia");
+        const image = el("segmentationResult");
+        if (!video || video.tagName !== "VIDEO" || image.hidden) return;
+        const time = Number(image.dataset.timeSeconds);
+        if (!Number.isFinite(time)) return;
+        video.pause();
+        video.currentTime = time;
+        video.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
     el("mediaFile").addEventListener("change", previewSelectedFile);
     el("analysisForm").addEventListener("submit", submitAnalysis);
     renderAll();
