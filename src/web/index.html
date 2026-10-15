@@ -276,7 +276,7 @@ tbody tr:last-child td{border-bottom:0}
       <div class="timeline-placeholder" id="timelineEmpty">Upload a video to see how the estimated segmented area changes across sampled frames.</div>
      </section>
      <section class="panel" aria-labelledby="verdictTitle">
-      <div class="panel-heading"><h2 id="verdictTitle">Current assessment</h2><span class="panel-sub">Temporal rule · 3 of 5</span></div>
+      <div class="panel-heading"><h2 id="verdictTitle">Current assessment</h2><span class="panel-sub" id="assessmentMode">Temporal rule · 3 of 5</span></div>
       <div class="assessment-main">
        <span class="assessment-label">Temporal verdict</span>
        <div class="risk-value" id="riskDisplay">—</div>
@@ -443,6 +443,7 @@ tbody tr:last-child td{border-bottom:0}
 
     function renderAssessment(analysis) {
         if (!analysis) {
+            setText("assessmentMode", "Temporal rule · 3 of 5");
             setText("sampleCount", "—");
             setText("confirmedWindows", "—");
             setText("firstConfirmation", "—");
@@ -461,6 +462,7 @@ tbody tr:last-child td{border-bottom:0}
             const risk = analysis.risk || {};
             const temporal = analysis.temporal || {};
             const status = temporal.status || "UNKNOWN";
+            setText("assessmentMode", "Temporal rule · 3 of 5");
 
             setText("sampleCount", analysis.video && analysis.video.samples_analyzed);
             setText("confirmedWindows", temporal.confirmed_windows);
@@ -496,6 +498,7 @@ tbody tr:last-child td{border-bottom:0}
             );
         } else {
             const positive = Boolean(analysis.flood_detected);
+            setText("assessmentMode", "Single image · no temporal check");
             setText("sampleCount", "1");
             setText("confirmedWindows", "Not applicable");
             setText("firstConfirmation", "—");
@@ -718,6 +721,10 @@ tbody tr:last-child td{border-bottom:0}
         clearSegmentationPreview();
 
         if (!file) {
+            const placeholder = document.createElement("p");
+            placeholder.className = "media-empty";
+            placeholder.textContent = "Select an image or video to preview.";
+            container.appendChild(placeholder);
             setText("uploadFeedback", "No file selected.");
             return;
         }
@@ -763,6 +770,7 @@ tbody tr:last-child td{border-bottom:0}
         const message = el("uploadFeedback");
         clearSegmentationPreview();
         button.disabled = true;
+        el("mediaFile").disabled = true;
         button.textContent = "Analyzing…";
         message.classList.remove("error");
         message.textContent =
@@ -820,6 +828,7 @@ tbody tr:last-child td{border-bottom:0}
             message.textContent = "Analysis failed: " + error.message;
         } finally {
             button.disabled = false;
+            el("mediaFile").disabled = false;
             button.textContent = "Analyze footage ↗";
         }
     }
