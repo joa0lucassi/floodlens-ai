@@ -1,5 +1,7 @@
 import json
-import shutil
+import io
+import os
+from PIL import Image, UnidentifiedImageError
 import tempfile
 from pathlib import Path
 
@@ -15,6 +17,14 @@ from fastapi import (
 )
 
 from fastapi.responses import FileResponse
+
+from src.api.demo_security import (
+    DemoSecurityMiddleware,
+    MAX_IMAGE_BYTES,
+    MAX_VIDEO_BYTES,
+    MAX_IMAGE_PIXELS,
+    MAX_VIDEO_SECONDS,
+)
 
 from src.storage.s3_storage import (
     S3Storage,
@@ -47,6 +57,8 @@ app = FastAPI(
     ),
     version="0.7.0",
 )
+
+app.add_middleware(DemoSecurityMiddleware)
 
 
 flood_analyzer = FloodAnalyzer()
@@ -86,6 +98,8 @@ def health():
 
 @app.get("/risk/latest")
 def latest_risk():
+    if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+        raise HTTPException(403, "Shared risk records are disabled for the judge demo.")
     if not RISK_ASSESSMENT_PATH.exists():
         raise HTTPException(
             status_code=404,
@@ -125,6 +139,8 @@ def analyses_history(
         le=100,
     )
 ):
+    if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+        raise HTTPException(403, "Shared history is disabled for the judge demo.")
     if not storage.enabled:
         raise HTTPException(
             status_code=503,
@@ -143,7 +159,7 @@ def analyses_history(
     except RuntimeError as error:
         raise HTTPException(
             status_code=500,
-            detail=str(error),
+            detail="Storage operation failed.",
         )
 
     return {
@@ -153,7 +169,7 @@ def analyses_history(
 
 
 @app.post("/analyze/image")
-async def analyze_image(
+def analyze_image(
     file: UploadFile = File(...),
     include_visualization: bool = Query(default=False),
 ):
@@ -172,7 +188,21 @@ async def analyze_image(
             ),
         )
 
-    image_bytes = await file.read()
+    image_bytes = file.file.read(MAX_IMAGE_BYTES + 1)
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail="Image exceeds 8 MiB demo limit.",
+        )
+
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as header:
+            if header.width * header.height > MAX_IMAGE_PIXELS:
+                raise HTTPException(413, "Image resolution exceeds 16 megapixels.")
+            if header.format not in {"JPEG", "PNG", "WEBP"}:
+                raise HTTPException(400, "Unsupported image encoding.")
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
+        raise HTTPException(400, "Invalid image file.")
 
     numpy_buffer = np.frombuffer(
         image_bytes,
@@ -188,6 +218,12 @@ async def analyze_image(
         raise HTTPException(
             status_code=400,
             detail="Invalid image file.",
+        )
+
+    if image.shape[0] * image.shape[1] > MAX_IMAGE_PIXELS:
+        raise HTTPException(
+            status_code=413,
+            detail="Image resolution exceeds 16 megapixels.",
         )
 
     analysis = flood_analyzer.analyze(
@@ -268,7 +304,7 @@ async def analyze_image(
         except RuntimeError as error:
             storage_result[
                 "error"
-            ] = str(error)
+            ] = "Storage operation failed."
 
     return {
         **response,
@@ -306,12 +342,7 @@ def analyze_video(
         or "uploaded_video.mp4"
     )
 
-    suffix = Path(
-        original_name
-    ).suffix
-
-    if not suffix:
-        suffix = ".mp4"
+    suffix = {"video/mp4": ".mp4", "video/quicktime": ".mov", "video/x-msvideo": ".avi"}[file.content_type]
 
     temp_path = None
 
@@ -324,21 +355,26 @@ def analyze_video(
             delete=False,
             suffix=suffix,
         ) as temporary_file:
-
-            shutil.copyfileobj(
-                file.file,
-                temporary_file,
-            )
-
-            temp_path = Path(
-                temporary_file.name
-            )
+            temp_path = Path(temporary_file.name)
+            written = 0
+            while True:
+                chunk = file.file.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > MAX_VIDEO_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="Video exceeds 48 MiB demo limit.",
+                    )
+                temporary_file.write(chunk)
 
         analysis = (
             video_analyzer
             .analyze_video(
                 temp_path,
                 include_visualization=include_visualization,
+                max_duration_seconds=MAX_VIDEO_SECONDS,
             )
         )
         # The overlay is returned to the requesting browser only.
@@ -408,7 +444,7 @@ def analyze_video(
             except RuntimeError as error:
                 storage_result[
                     "error"
-                ] = str(error)
+                ] = "Storage operation failed."
 
         return {
             **response,
