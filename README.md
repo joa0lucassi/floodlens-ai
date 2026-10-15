@@ -587,6 +587,8 @@ When running an AGPL-covered modified application as a network service, provide 
 
 See [Model and dataset provenance audit](docs/data_provenance_and_model_release.md) for the dataset-builder counts, attribution sources, official checkpoint SHA-256, and the unresolved licensing items that must be checked before releasing weights.
 
+**Data attribution:** The `Deepflood.zip`, `Sazara.zip`, and `WebCOOS.zip` research package used in this project came from **Wang, Y. (2024), *Urban Flood Image Dataset*, HydroShare**, which declares its resource under **CC BY 4.0**: https://www.hydroshare.org/resource/24866122a6ee456c8f7c80aa87a9abcb/ . We also credit the underlying research sources (Chaudhary et al., Sazara et al., and Wang et al.) in the provenance document. Per-image rights and the separate MultiDomain hard-negative sources remain subject to further review.
+
 The project's experimental status and model limitations are documented above. This open-source license does not constitute a certification for emergency response, privacy compliance or operational safety.
 
 ---
