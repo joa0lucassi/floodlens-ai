@@ -30,9 +30,12 @@ Test the limited video and image upload routes and the health endpoint. Then rep
 1. Review the ECS task definition and existing security group. Do **not** open TCP 8000 to the internet.
 2. Provide `FLOODLENS_DEMO_PASSWORD` through AWS Secrets Manager or equivalent secret injection, not a source file or publicly visible task-definition value; set `FLOODLENS_DEMO_REQUIRE_AUTH=1`.
 3. Configure a **stable HTTPS** entry point, TLS certificate, and allow only entry-point traffic to the container. Verify actual Free Plan credit eligibility and the running cost before enabling resources.
-4. Configure trusted-edge **request-size/rate limiting**, concurrency/timeouts, and logging. Application-level size checks are not a full streaming upload limit; multipart requests without Content-Length may spool data before the endpoint is invoked.
+4. Configure trusted-edge **request-size/rate limiting**, concurrency/timeouts, and logging. The reviewed branch now counts streamed body bytes before multipart parsing. Edge total-upload deadlines and a supervised processing deadline remain deployment gates.
 5. Prefer disabling S3 storage for the public demo unless there is a documented data-retention policy. If using S3, verify bucket permissions, encryption, lifecycle, and access controls.
 6. Use only authorized demonstration media; check the data/model provenance audit before distributing weights or frames.
 7. Test from an independent browser/network, monitor CloudWatch and Billing, and stop the ECS tasks afterward. Billing alerts are notifications, not a hard spending cap.
 
 **Important:** Public GitHub alone is not runnable without an authorized model checkpoint. This change neither distributes weights nor establishes source-media rights. Do not deploy this branch to AWS or merge it into `main` before a local functional test and a separate security review.
+
+
+See the subsequent [technical review](judge_security_review_2026-10-15.md) and [current deployment gates](judge_access_plan.md); this initial PR checklist alone is not a release approval.

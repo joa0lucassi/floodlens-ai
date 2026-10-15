@@ -1,4 +1,7 @@
 import json
+import io
+import os
+from PIL import Image, UnidentifiedImageError
 import tempfile
 from pathlib import Path
 
@@ -95,6 +98,8 @@ def health():
 
 @app.get("/risk/latest")
 def latest_risk():
+    if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+        raise HTTPException(403, "Shared risk records are disabled for the judge demo.")
     if not RISK_ASSESSMENT_PATH.exists():
         raise HTTPException(
             status_code=404,
@@ -134,6 +139,8 @@ def analyses_history(
         le=100,
     )
 ):
+    if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+        raise HTTPException(403, "Shared history is disabled for the judge demo.")
     if not storage.enabled:
         raise HTTPException(
             status_code=503,
@@ -152,7 +159,7 @@ def analyses_history(
     except RuntimeError as error:
         raise HTTPException(
             status_code=500,
-            detail=str(error),
+            detail="Storage operation failed.",
         )
 
     return {
@@ -162,7 +169,7 @@ def analyses_history(
 
 
 @app.post("/analyze/image")
-async def analyze_image(
+def analyze_image(
     file: UploadFile = File(...),
     include_visualization: bool = Query(default=False),
 ):
@@ -181,12 +188,21 @@ async def analyze_image(
             ),
         )
 
-    image_bytes = await file.read(MAX_IMAGE_BYTES + 1)
+    image_bytes = file.file.read(MAX_IMAGE_BYTES + 1)
     if len(image_bytes) > MAX_IMAGE_BYTES:
         raise HTTPException(
             status_code=413,
             detail="Image exceeds 8 MiB demo limit.",
         )
+
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as header:
+            if header.width * header.height > MAX_IMAGE_PIXELS:
+                raise HTTPException(413, "Image resolution exceeds 16 megapixels.")
+            if header.format not in {"JPEG", "PNG", "WEBP"}:
+                raise HTTPException(400, "Unsupported image encoding.")
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
+        raise HTTPException(400, "Invalid image file.")
 
     numpy_buffer = np.frombuffer(
         image_bytes,
@@ -288,7 +304,7 @@ async def analyze_image(
         except RuntimeError as error:
             storage_result[
                 "error"
-            ] = str(error)
+            ] = "Storage operation failed."
 
     return {
         **response,
@@ -326,12 +342,7 @@ def analyze_video(
         or "uploaded_video.mp4"
     )
 
-    suffix = Path(
-        original_name
-    ).suffix
-
-    if not suffix:
-        suffix = ".mp4"
+    suffix = {"video/mp4": ".mp4", "video/quicktime": ".mov", "video/x-msvideo": ".avi"}[file.content_type]
 
     temp_path = None
 
@@ -433,7 +444,7 @@ def analyze_video(
             except RuntimeError as error:
                 storage_result[
                     "error"
-                ] = str(error)
+                ] = "Storage operation failed."
 
         return {
             **response,

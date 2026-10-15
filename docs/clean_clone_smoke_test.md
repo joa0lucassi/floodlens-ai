@@ -100,3 +100,8 @@ This supports **local reproducibility of inference and the UI with an authorized
 - `/risk/latest` relies on an optional local JSON file and may return 404; the dashboard and `/analyze/image`, `/analyze/video` are the relevant clean-clone smoke test endpoints.
 - Without S3 configuration, analysis history is only retained during the current browser session and isn't persisted.
 - This is a **smoke test**, not a formal independent-model evaluation or a production security review.
+
+
+## Judge-demo review update — 2026-10-15
+
+The separate security review branch adds guarded uploads, admission limits, HTTPS-required configuration, non-root container execution, and ephemeral judge sessions (S3 and shared history disabled). The official checkpoint, inference parameters and frozen evaluation remain unchanged. See [review evidence](judge_security_review_2026-10-15.md), [access/cost/shutdown plan](judge_access_plan.md), and [video script](video_script_en.md). Local model-free tests are not real-model or cloud validation. No HTTPS endpoint has been deployed during this review; earlier local/AWS passes do not validate the new branch. Weight distribution remains restricted pending rights review.

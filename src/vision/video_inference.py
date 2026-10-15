@@ -2,6 +2,7 @@
 from collections import deque
 from pathlib import Path
 import math
+import time
 
 import cv2
 
@@ -40,26 +41,25 @@ class VideoFloodAnalyzer:
                 "Could not open the uploaded video."
             )
 
-        fps = video.get(cv2.CAP_PROP_FPS)
-        total_frames = int(
-            video.get(cv2.CAP_PROP_FRAME_COUNT)
-        )
-
-        if fps <= 0 or total_frames <= 0:
+        try:
+            fps = video.get(cv2.CAP_PROP_FPS)
+            frame_count = video.get(cv2.CAP_PROP_FRAME_COUNT)
+            width = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+            height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            if not all(math.isfinite(v) and v > 0 for v in (fps, frame_count, width, height)):
+                raise ValueError("Invalid video metadata.")
+            total_frames = int(frame_count)
+            duration_seconds = total_frames / fps
+            if max_duration_seconds is not None:
+                if not math.isfinite(max_duration_seconds) or max_duration_seconds <= 0:
+                    raise ValueError("Invalid duration limit.")
+                if duration_seconds > max_duration_seconds:
+                    raise ValueError(f"Video exceeds {max_duration_seconds:g} seconds.")
+                if width * height > 1920 * 1080:
+                    raise ValueError("Demo video resolution exceeds 1920x1080 pixels.")
+        except Exception:
             video.release()
-            raise ValueError(
-                "Invalid video FPS or frame count."
-            )
-
-        duration_seconds = total_frames / fps
-        if (
-            max_duration_seconds is not None
-            and duration_seconds > max_duration_seconds
-        ):
-            video.release()
-            raise ValueError(
-                f"Video exceeds {max_duration_seconds:g} seconds."
-            )
+            raise
 
         window = deque(maxlen=TEMPORAL_WINDOW)
         records = []
@@ -70,8 +70,11 @@ class VideoFloodAnalyzer:
         preview_time = None
         preview_area = -1.0
 
+        started = time.monotonic()
         try:
             while current_time < duration_seconds:
+                if max_duration_seconds is not None and time.monotonic() - started > 180:
+                    raise ValueError("Demo processing time budget exceeded.")
                 video.set(
                     cv2.CAP_PROP_POS_MSEC,
                     current_time * 1000,
@@ -82,6 +85,8 @@ class VideoFloodAnalyzer:
                 if not success:
                     break
 
+                if max_duration_seconds is not None and frame.shape[0] * frame.shape[1] > 1920 * 1080:
+                    raise ValueError("Decoded frame exceeds demo resolution limit.")
                 analysis = self.flood_analyzer.analyze(
                     frame
                 )

@@ -27,6 +27,9 @@ RUN python -m pip install \
 COPY src ./src
 COPY models ./models
 
+RUN useradd --create-home --uid 10001 floodlens
+USER 10001:10001
+
 EXPOSE 8000
 
-CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--limit-concurrency", "16", "--timeout-keep-alive", "5", "--no-access-log"]

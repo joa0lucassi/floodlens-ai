@@ -23,6 +23,10 @@ class S3Storage:
             "us-east-1"
         )
 
+        # Judge uploads are ephemeral; do not expose or append shared history.
+        if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+            self.bucket_name = None
+
         self.enabled = bool(
             self.bucket_name
         )
