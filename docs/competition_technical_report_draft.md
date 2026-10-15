@@ -50,6 +50,8 @@ flowchart TD
 
 **Implementation reference:** `src/api/main.py`, `src/vision/inference.py`, `src/vision/video_inference.py`, `src/risk/risk_engine.py`, `src/storage/s3_storage.py`, `src/web/index.html`.
 
+A separate, judge-facing diagram showing both local and AWS runtime and the on-demand visualization path is available in [`docs/submission_architecture.md`](submission_architecture.md). The dashboard displays the source media next to a cyan prediction overlay; for video, the visualization is one selected sampled frame and does not alter the temporal decision.
+
 ## 4. Substantive OpenCV 5 Usage
 
 The project uses OpenCV in the computer vision pipeline, including:
@@ -174,12 +176,20 @@ A future version may improve difficult negative discrimination through larger di
 
 ## 12. Competition Submission Checklist — Open Items
 
+**Competition deadline:** October 26, 2026. The public Devpost banner displays 11:45 p.m. PDT, while the competition page body states 11:59 p.m. Pacific. Submit **before the earlier displayed time** and confirm the deadline in the account's submission form.
+
+**Rights reminder:** Official contest rules require authorization for all materials actually submitted and grant organizers a broad license over those submitted materials. Do not include any unlicensed third-party training photos, unchecked sample videos, original datasets, or confidential credentials in the report, screenshots, demo video or uploads. A reference to privately held weights does not itself constitute submission of those weights.
+
+**Judge-facing written draft:** [Devpost copy](submission_devpost_draft.md). **Architecture diagram:** [submission architecture](submission_architecture.md).
+
 - [ ] Validate third-party dataset, model, code and video rights and required attribution.
 - [ ] Arrange authorized judge access to the required official model checkpoint.
 - [ ] Deliver a judge-accessible live endpoint **or** coordinate a live screen-share demonstration. ECS is currently shut down when not in use.
 - [ ] Produce a public/unlisted judge-accessible demonstration video (maximum 5 minutes) with team identification, working system, architecture, real results, and limitations.
+- [x] Prepare the first complete English Devpost project narrative and source-linked architecture diagram.
 - [ ] Export and review final report and architecture graphic for readability.
-- [ ] Confirm the exact Devpost submission deadline and submit early.
+- [x] Check the competition deadline shown publicly (noting the 11:45 vs 11:59 p.m. PDT discrepancy).
+- [ ] Confirm cutoff inside the authenticated submission form and submit before the earlier published time.
 - [x] Verify the implemented FloodLens dashboard and segmentation preview against the real local API; user-tested on both a flood video and a challenging negative video, and the redesigned dashboard was rechecked after integration.
 
 ## Sources in this repository
