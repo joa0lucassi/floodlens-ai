@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse
 
 from src.api.demo_security import (
     DemoSecurityMiddleware,
+    private_demo_enabled,
     MAX_IMAGE_BYTES,
     MAX_VIDEO_BYTES,
     MAX_IMAGE_PIXELS,
@@ -98,7 +99,7 @@ def health():
 
 @app.get("/risk/latest")
 def latest_risk():
-    if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+    if private_demo_enabled():
         raise HTTPException(403, "Shared risk records are disabled for the judge demo.")
     if not RISK_ASSESSMENT_PATH.exists():
         raise HTTPException(
@@ -139,7 +140,7 @@ def analyses_history(
         le=100,
     )
 ):
-    if os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1":
+    if private_demo_enabled():
         raise HTTPException(403, "Shared history is disabled for the judge demo.")
     if not storage.enabled:
         raise HTTPException(

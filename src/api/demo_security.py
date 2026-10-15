@@ -3,6 +3,7 @@
 This is not a substitute for edge rate limits, concurrency controls, or
 AWS/network security configuration.
 """
+import asyncio
 import base64
 import binascii
 import os
@@ -20,6 +21,12 @@ MAX_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_VIDEO_BYTES = 48 * 1024 * 1024
 MAX_IMAGE_PIXELS = 16_000_000
 MAX_VIDEO_SECONDS = 60.0
+MAX_UPLOAD_SECONDS = 60.0
+
+
+def private_demo_enabled():
+    """Use the same privacy policy for every authenticated demo configuration."""
+    return bool(os.getenv("FLOODLENS_DEMO_PASSWORD")) or os.getenv("FLOODLENS_DEMO_REQUIRE_AUTH") == "1"
 
 
 class DemoSecurityMiddleware:
@@ -164,10 +171,20 @@ class DemoSecurityMiddleware:
             self.analyses.append(now)
             self.busy = True
         received = 0
+        upload_started = time.monotonic()
 
         async def bounded_receive():
             nonlocal received
-            message = await receive()
+            if is_analysis:
+                remaining = MAX_UPLOAD_SECONDS - (time.monotonic() - upload_started)
+                if remaining <= 0:
+                    raise HTTPException(408, "Upload deadline exceeded.")
+                try:
+                    message = await asyncio.wait_for(receive(), timeout=remaining)
+                except TimeoutError:
+                    raise HTTPException(408, "Upload deadline exceeded.") from None
+            else:
+                message = await receive()
             if message["type"] == "http.request":
                 received += len(message.get("body", b""))
                 limit = (upload_limit or MAX_IMAGE_BYTES) + 1024 * 1024

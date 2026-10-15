@@ -117,6 +117,11 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get('/risk/latest').status_code,403)
         self.assertFalse(self.main.storage.enabled)
 
+    def test_password_only_configuration_denies_shared_history(self):
+        with patch.dict(os.environ, {'FLOODLENS_DEMO_REQUIRE_AUTH': ''}):
+            self.assertEqual(self.client.get('/analyses/history').status_code, 403)
+            self.assertEqual(self.client.get('/risk/latest').status_code, 403)
+
     def test_image_response_and_preview(self):
         b=io.BytesIO();Image.new('RGB',(32,32)).save(b,format='PNG')
         r=self.client.post('/analyze/image?include_visualization=true',files={'file':('owned.png',b.getvalue(),'image/png')})

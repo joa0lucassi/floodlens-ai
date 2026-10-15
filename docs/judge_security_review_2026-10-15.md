@@ -34,3 +34,16 @@ No changes to `src/vision/inference.py`, risk engine, evaluation code or frozen 
 ## Release disposition
 
 Ready for code review; **not ready for merge/deployment as a fully validated live demo**. Complete real-model Docker/UI smoke tests, hard processing deadline/edge upload controls, private secret injection, AWS read-only inspection and approved cost/HTTPS design first. See [access plan](judge_access_plan.md). This is a targeted engineering review, not a comprehensive penetration test or dependency vulnerability audit.
+
+## Follow-up verification — 2026-10-15
+
+Reviewed the existing PR #3 head `78edc16` in a separate branch, rather than discarding its work. Two additional fixes:
+
+- Apply a total 60-second ASGI body-read deadline to analysis uploads. A stalled body returns 408 and releases the admission gate. This is an upload deadline, **not** a hard inference deadline; edge protections are still required.
+- Apply S3/history/risk privacy restrictions whenever a demo password is configured, including when the require-auth flag is omitted. This prevents an authenticated but incorrectly configured demo from retaining shared media.
+
+Executed `python -m unittest discover -s tests -v`: **21 tests passed** on Python 3.12 with the pinned test requirements. Initial OpenCV import aborted with a native bus error; reinstalling the exact same OpenCV wheel without cache resolved it, then the full suite passed. No dependency version was changed to obtain that result. Four original auth tests and two new follow-up tests also passed separately.
+
+The original inference implementation, risk engine, evaluation code and final-holdout report are byte-for-byte unchanged relative to main. No real checkpoint or licensed development road media is available in this checkout. Docker is unavailable. Browser layout, real-model CPU/memory behavior, hard inference deadlines and external HTTPS remain release gates.
+
+AWS console inspection was attempted and retried once: both showed Site Unavailable, before account authentication. The available AWS plugin search returned analytics tooling, not ECS/Billing inspection. No AWS credentials were requested, no resource was mutated, and no infrastructure spend was initiated.
