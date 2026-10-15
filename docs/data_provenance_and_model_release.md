@@ -61,9 +61,15 @@ The resource landing page explicitly states: **Creative Commons Attribution (CC 
 
 **Do not confuse Deepflood resources.** An unrelated `DEEPFLOOD DATASET` (2025) on Figshare concerns aerial/remote-sensing imagery: https://figshare.com/articles/dataset/DEEPFLOOD_DATASET_High-Resolution_Dataset_for_Accurate_Flood_Mappingand_Segmentation/28328339 . Its license is not the basis for our street-level ZIP.
 
-### Hard negatives — status unresolved
+### Hard negatives — 21 originals, provenance not documented
 
-The builder adds 21 unique images repeated three times, selected for the MultiDomain base. Their per-file source URLs and licenses must be reconciled against the original `data/negative_training/prepared` and any associated manifests. Do not conflate these with the separately trained BDD100K V3 set.
+On 2026-10-05, the project developer manually supplied **21 negative images** (seven in each of three categories) to `data/negative_training/images`. The images were normalized to filenames `floodlens_negative_001.jpg` through `floodlens_negative_021.jpg`, paired with empty YOLO segmentation labels, copied into `data/negative_training/prepared/` and packaged as `data/negative_training/negative_training.zip`.
+
+The project developer's 2026-10-15 local inspection confirmed 21 images in `images/`, 21 in `prepared/images/`, 21 annotation files in `prepared/labels/`, and the archive `negative_training.zip`. No CSV, JSON, Markdown, README, license, or attribution manifest was found in the local dataset tree. The original conversations did not record exact source URLs, authors, or individual image licenses.
+
+The MultiDomain builder repeats **each of these 21 images three times** to form 63 training records. Repeats are **not** independent or distinct images. The archive creation date and the renamed filenames do **not** establish the original photographs' authorship, usage permissions, or license.
+
+**Audit status: provenance unresolved.** Do not represent these images as CC BY, CC0, Pexels, Unsplash, or as personally photographed without evidence. Do not publish their ZIP or their derived dataset. Before deciding whether to publish model weights, determine the images' original origin and permissions and consider the legal implications for model distribution. Keep this set distinct from the later BDD100K V3 experiment.
 
 ### BDD100K — experimental V3 only
 
@@ -73,7 +79,8 @@ The 108 hard-negative BDD100K images were used to train the **experimental V3 ca
 
 - [x] Identify original HydroShare resource for the three ZIP files and confirm its **CC BY 4.0 resource-level** statement.
 - [ ] Add complete HydroShare/Wang and original dataset-author credits to project-facing documentation; investigate third-party rights where relevant.
-- [ ] Find source URLs and individual licenses for the 21 unique MultiDomain hard-negative images.
+- [x] Reconcile the 21-file local negative-training archive with the documented original workflow; confirmed that no per-image source manifest was created.
+- [ ] Establish the original authorship, source URLs and permitted uses of those 21 images before marking their rights cleared.
 - [ ] Resolve any conditions restricting training, derivative use, model distribution, attribution, and competition use.
 - [ ] Record complete dataset/source author attributions in the report and README.
 - [ ] Validate the official `best.pt` SHA-256 matches this document prior to any upload.
