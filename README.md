@@ -433,6 +433,19 @@ The application expects the model at:
 models/flood_segmentation/best.pt
 ```
 
+To verify that your locally provided checkpoint matches the frozen official
+MultiDomain model (SHA-256), run:
+
+```bash
+python scripts/verify_official_model.py
+```
+
+For a complete clean-clone Docker smoke test (no AWS required), follow
+[Clean-clone reproducibility test](docs/clean_clone_smoke_test.md).
+A cloned checkout cannot launch the model-dependent API until an authorized
+copy of the official weights is placed at the path above. Distribution rights
+for the weights are still under review.
+
 ### 5. Start the API
 
 ```bash
