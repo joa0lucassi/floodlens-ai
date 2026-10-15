@@ -80,6 +80,19 @@ Pop-Location
 
 Avoid deleting the original project or its checkpoint; the `$testRoot` directory is disposable.
 
+## Verification log — 2026-10-15
+
+**Status: PASS — developer-reported local clean-clone smoke test.**
+
+The project developer followed this procedure with a separate checkout of GitHub `main` and reported:
+
+1. Checkpoint verified against the frozen official SHA-256 with `scripts/verify_official_model.py`: **PASS**.
+2. Fresh Docker image built and started successfully on localhost port **8002**: **PASS**.
+3. `GET http://127.0.0.1:8002/health` returned **`status: healthy`**, **`model_loaded: True`**, **`s3_enabled: False`**, **`version: 0.7.0`**: **PASS**.
+4. Opened the dashboard at port 8002 and completed a real upload/video analysis: **PASS, as reported by the developer**. No new detailed numerical metrics or logs were provided for this run.
+
+This supports **local reproducibility of inference and the UI with an authorized model file supplied separately**. It does **not** demonstrate that a public clone without weights is self-contained, establish production readiness, validate new model accuracy, or resolve third-party distribution rights.
+
 ## Notes
 
 - The public GitHub repository intentionally excludes `*.pt` and the `models` directory; therefore a fresh checkout **cannot be built until a legitimately obtained model file is placed at the documented path**.
