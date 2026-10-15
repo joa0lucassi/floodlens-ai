@@ -901,19 +901,32 @@ tbody tr:last-child td{border-bottom:0}
     sectionLinks.forEach((link) => {
         link.addEventListener("click", () => activateNav(link.hash.slice(1)));
     });
-    if ("IntersectionObserver" in window) {
-        const observer = new IntersectionObserver((entries) => {
-            const visible = entries.filter((entry) => entry.isIntersecting);
-            if (visible.length) {
-                visible.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-                activateNav(visible[0].target.id);
-            }
-        }, { rootMargin: "-18% 0px -55% 0px", threshold: [0, 0.05, 0.15] });
-        sectionLinks.forEach((link) => {
+    // Set navigation based on the section occupying the upper reading area.
+    // More reliable than intersection callbacks when sections are tall.
+    let navScrollQueued = false;
+    function syncNavToScroll() {
+        navScrollQueued = false;
+        const anchor = Math.min(window.innerHeight * 0.30, 230);
+        let currentId = "overview";
+        for (const link of sectionLinks) {
             const section = document.getElementById(link.hash.slice(1));
-            if (section) observer.observe(section);
-        });
+            if (section && section.getBoundingClientRect().top <= anchor) {
+                currentId = section.id;
+            }
+        }
+        const atBottom = window.scrollY + window.innerHeight
+            >= document.documentElement.scrollHeight - 20;
+        if (atBottom) currentId = "history";
+        activateNav(currentId);
     }
+    function scheduleNavSync() {
+        if (navScrollQueued) return;
+        navScrollQueued = true;
+        window.requestAnimationFrame(syncNavToScroll);
+    }
+    window.addEventListener("scroll", scheduleNavSync, { passive: true });
+    window.addEventListener("resize", scheduleNavSync);
+    scheduleNavSync();
     el("mediaFile").addEventListener("change", previewSelectedFile);
     el("analysisForm").addEventListener("submit", submitAnalysis);
     renderAll();
