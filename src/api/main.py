@@ -1,5 +1,4 @@
 import json
-import shutil
 import tempfile
 from pathlib import Path
 
@@ -15,6 +14,14 @@ from fastapi import (
 )
 
 from fastapi.responses import FileResponse
+
+from src.api.demo_security import (
+    DemoSecurityMiddleware,
+    MAX_IMAGE_BYTES,
+    MAX_VIDEO_BYTES,
+    MAX_IMAGE_PIXELS,
+    MAX_VIDEO_SECONDS,
+)
 
 from src.storage.s3_storage import (
     S3Storage,
@@ -47,6 +54,8 @@ app = FastAPI(
     ),
     version="0.7.0",
 )
+
+app.add_middleware(DemoSecurityMiddleware)
 
 
 flood_analyzer = FloodAnalyzer()
@@ -172,7 +181,12 @@ async def analyze_image(
             ),
         )
 
-    image_bytes = await file.read()
+    image_bytes = await file.read(MAX_IMAGE_BYTES + 1)
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail="Image exceeds 8 MiB demo limit.",
+        )
 
     numpy_buffer = np.frombuffer(
         image_bytes,
@@ -188,6 +202,12 @@ async def analyze_image(
         raise HTTPException(
             status_code=400,
             detail="Invalid image file.",
+        )
+
+    if image.shape[0] * image.shape[1] > MAX_IMAGE_PIXELS:
+        raise HTTPException(
+            status_code=413,
+            detail="Image resolution exceeds 16 megapixels.",
         )
 
     analysis = flood_analyzer.analyze(
@@ -324,21 +344,26 @@ def analyze_video(
             delete=False,
             suffix=suffix,
         ) as temporary_file:
-
-            shutil.copyfileobj(
-                file.file,
-                temporary_file,
-            )
-
-            temp_path = Path(
-                temporary_file.name
-            )
+            temp_path = Path(temporary_file.name)
+            written = 0
+            while True:
+                chunk = file.file.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > MAX_VIDEO_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="Video exceeds 48 MiB demo limit.",
+                    )
+                temporary_file.write(chunk)
 
         analysis = (
             video_analyzer
             .analyze_video(
                 temp_path,
                 include_visualization=include_visualization,
+                max_duration_seconds=MAX_VIDEO_SECONDS,
             )
         )
         # The overlay is returned to the requesting browser only.
