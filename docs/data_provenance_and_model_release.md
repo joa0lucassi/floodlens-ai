@@ -1,6 +1,6 @@
 # FloodLens AI — Model and Dataset Provenance
 
-**Status:** preliminary audit, 2026-10-15. This document does **not** certify that every data source permits training or redistribution. Verify the exact original files, the license bundled with each downloaded dataset, and any downstream conditions before releasing the official checkpoint.
+**Status:** provenance audit updated 2026-10-15. The HydroShare source and its CC BY 4.0 resource-level license have been identified. This does **not** certify that every upstream image contributor granted all permissions or that model weights can automatically be redistributed.
 
 ## 1. Official model
 
@@ -21,11 +21,11 @@ The source code at `src/dataset/build_combined_dataset.py` constructs:
 | Dataset | Role | Images | Licensing status |
 | --- | --- | ---: | --- |
 | RuaLivreIA | training | 1,040 | **CC BY 4.0** shown on the Roboflow Universe dataset page; attribution required |
-| Deepflood, UFES-prepared copy | training | 1,002 | **Undetermined for this exact download** |
-| Sazara, UFES-prepared copy | training | 241 | **Undetermined for this exact download** |
+| Deepflood, HydroShare package | training | 1,002 | **HydroShare resource states CC BY 4.0**; upstream third-party rights to review |
+| Sazara, HydroShare package | training | 241 | **HydroShare resource states CC BY 4.0**; upstream third-party rights to review |
 | Hard-negative images | training | 63 (21 images repeated 3 times) | **Original individual files and licenses require audit** |
 | RuaLivreIA | validation | 99 | CC BY 4.0 as indicated above |
-| WebCOOS, UFES-prepared copy | validation | 35 | **Undetermined for this exact download** |
+| WebCOOS, HydroShare package | validation | 35 | **HydroShare resource states CC BY 4.0**; upstream third-party rights to review |
 
 Total: **2,346 training image records** and **134 validation records**. The hard-negative 63 count represents 21 unique images repeated three times; it must not be described as 63 independent images.
 
@@ -40,28 +40,26 @@ These figures describe how the checked-in dataset-builder was configured; they s
 - Cite/credit `frank-oliveira`, dataset title, source URL, the CC BY 4.0 license, and indicate adaptation to YOLO training as applicable.
 - Verify that the locally downloaded version matches the intended dataset/version (the project previously used version 1).
 
-### Deepflood — source disambiguation is essential
+### Deepflood, Sazara and WebCOOS — HydroShare resource identified
 
-The **street-level Deepflood** described by Chaudhary et al. (2020) contains 8,145 flood images, with 1,259 images carrying pixel-level object annotations. It is discussed in Wang et al.'s urban flood segmentation study, alongside Sazara and WebCOOS:
+**Original package:** [Urban Flood Image Dataset](https://www.hydroshare.org/resource/24866122a6ee456c8f7c80aa87a9abcb/), publicly attributed as:
 
-- https://doi.org/10.1016/j.envsoft.2023.105939
-- https://doi.org/10.1016/j.isprsjprs.2020.07.003
+> Wang, Y. (2024). *Urban Flood Image Dataset*. HydroShare. https://www.hydroshare.org/resource/24866122a6ee456c8f7c80aa87a9abcb/
 
-This is **not automatically the same resource** as the unrelated 2025 aerial/satellite `DEEPFLOOD DATASET` posted to Figshare under CC BY 4.0:
+The resource landing page explicitly states: **Creative Commons Attribution (CC BY 4.0)**, linking to https://creativecommons.org/licenses/by/4.0/. This license is displayed in the resource metadata and the download acceptance dialog rather than as `LICENSE` files in each ZIP.
 
-- https://figshare.com/articles/dataset/DEEPFLOOD_DATASET_High-Resolution_Dataset_for_Accurate_Flood_Mappingand_Segmentation/28328339
+**Provenance from the project's actual download workflow:** `Deepflood.zip`, `Sazara.zip`, and `WebCOOS.zip` were downloaded as the three archives from this exact HydroShare resource and retained together locally under `FloodLens_UFES`. The developer verified these three ZIPs contain 2,082, 508, and 73 archive entries, respectively, and **none has a named README/LICENSE/CITATION file**. Note that ZIP entry counts are not counts of independent training images.
 
-**Do not apply the Figshare license to the street-level source.** The exact licensing and distribution rights for the UFES-prepared copy still need the original archive or publisher's terms.
+**Attribution recommendation:** credit both the HydroShare resource publisher (Y. Wang, 2024, URL, CC BY 4.0) and the underlying dataset authors whenever known:
 
-### Sazara — status unresolved
+- **Deepflood (street-level):** Chaudhary et al., *Flood level estimation from social media images*, 2020; verify exact title and bibliographic details before the final paper citation. https://doi.org/10.1016/j.isprsjprs.2020.07.003
+- **Sazara:** Cem Sazara, Mecit Cetin and Khan M. Iftekharuddin (2019), *Detecting floodwater on roadways from image data with handcrafted features and deep transfer learning*. https://arxiv.org/abs/1909.00125
+- **WebCOOS:** camera imagery used within the urban flood study; original camera/data-owner permissions and attribution need checking.
+- **Study presenting these sources together:** Yidi Wang et al. (2024), *Urban flood extent segmentation and evaluation from real-world surveillance camera images using deep convolutional neural network*. https://doi.org/10.1016/j.envsoft.2023.105939
 
-- Research lineage: Cem Sazara et al. (2019), *Detecting floodwater on roadways from image data with handcrafted features and deep transfer learning*. https://arxiv.org/abs/1909.00125
-- Dataset license and permission to redistribute the exact UFES-prepared image/mask subset **have not been verified**.
+**Important licensing caveat:** The *HydroShare resource's* CC BY 4.0 declaration is now verified. It does not, by itself, prove that every third-party photograph included in the resource was lawfully relicensed or that all downstream derivative-model distribution questions are settled. We should not claim per-image original licenses have been audited. Preserve the explicit resource attribution and seek any necessary clarification before broader reuse/distribution.
 
-### WebCOOS — status unresolved
-
-- WebCOOS is a coastal/urban camera program discussed in the Wang et al. article above.
-- The exact 35 images/segmentation masks used for validation require source terms; license and distribution permission are **not established** by merely having access to the files.
+**Do not confuse Deepflood resources.** An unrelated `DEEPFLOOD DATASET` (2025) on Figshare concerns aerial/remote-sensing imagery: https://figshare.com/articles/dataset/DEEPFLOOD_DATASET_High-Resolution_Dataset_for_Accurate_Flood_Mappingand_Segmentation/28328339 . Its license is not the basis for our street-level ZIP.
 
 ### Hard negatives — status unresolved
 
@@ -73,7 +71,8 @@ The 108 hard-negative BDD100K images were used to train the **experimental V3 ca
 
 ## 4. Conditions before making a public weights release
 
-- [ ] Retrieve and review the original UFES dataset archive/readme/license for the **exact downloaded** Deepflood, Sazara and WebCOOS subsets.
+- [x] Identify original HydroShare resource for the three ZIP files and confirm its **CC BY 4.0 resource-level** statement.
+- [ ] Add complete HydroShare/Wang and original dataset-author credits to project-facing documentation; investigate third-party rights where relevant.
 - [ ] Find source URLs and individual licenses for the 21 unique MultiDomain hard-negative images.
 - [ ] Resolve any conditions restricting training, derivative use, model distribution, attribution, and competition use.
 - [ ] Record complete dataset/source author attributions in the report and README.
@@ -87,6 +86,7 @@ The 108 hard-negative BDD100K images were used to train the **experimental V3 ca
 
 - Ultralytics YOLO licensing: https://www.ultralytics.com/license
 - RuaLivreIA Roboflow dataset card: https://universe.roboflow.com/frank-oliveira/rualivreia
+- HydroShare Urban Flood Image Dataset (Wang, Y., 2024), CC BY 4.0: https://www.hydroshare.org/resource/24866122a6ee456c8f7c80aa87a9abcb/
 - Yidi Wang et al. (2024), urban flood extent segmentation from surveillance cameras: https://doi.org/10.1016/j.envsoft.2023.105939
 - Cem Sazara et al. (2019): https://arxiv.org/abs/1909.00125
 - Priyanka Chaudhary et al. (2020): https://doi.org/10.1016/j.isprsjprs.2020.07.003
