@@ -74,7 +74,7 @@ The **risk engine** heuristically combines average visual segmented area, area t
 
 ## 6. Experimental Data and Model Development
 
-The research used real-image sources such as RuaLivreIA and UFES-derived segmentation samples (Deepflood, Sazara, WebCOOS) in training or validation, with separate development and frozen final evaluation materials. Attribution and the full applicable terms for each third-party resource must be checked in the final data statement.
+The research used real-image sources such as RuaLivreIA and UFES-derived segmentation samples (Deepflood, Sazara, WebCOOS) in training or validation, with separate development and frozen final evaluation materials. The `Deepflood.zip`, `Sazara.zip` and `WebCOOS.zip` training/validation package is traceable to **Wang, Y. (2024), *Urban Flood Image Dataset*, HydroShare**, whose resource metadata declares **CC BY 4.0** (https://www.hydroshare.org/resource/24866122a6ee456c8f7c80aa87a9abcb/). Credit this resource and the original dataset researchers. The exact rights of individual source images and the 21 separately collected hard-negative images require further review. See `docs/data_provenance_and_model_release.md`.
 
 The V3 research stage assembled 108 visually reviewed hard-negative BDD100K images: rainy-day (40), nighttime (28), and rainy-night (40). The set contained 108 images paired with empty YOLO annotation files, representing scenes annotated as not flooded. This was a training experiment; it is **not** the independent evaluation set.
 
