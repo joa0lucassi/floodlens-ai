@@ -487,12 +487,48 @@
             color: #fda4af;
         }
 
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+            gap: 18px;
+            align-items: start;
+            margin-top: 12px;
+        }
+
         .preview-media {
+            display: block;
             max-width: 100%;
             max-height: 310px;
             border-radius: 9px;
-            margin-top: 12px;
             background: #050b17;
+        }
+
+        .segmentation-result[hidden] {
+            display: none;
+        }
+
+        .segmentation-result {
+            min-width: 0;
+            border: 1px solid #25425e;
+            border-radius: 9px;
+            padding: 10px;
+            background: #081627;
+        }
+
+        .segmentation-result img {
+            display: block;
+            width: 100%;
+            max-height: 310px;
+            object-fit: contain;
+            border-radius: 5px;
+            background: #050b17;
+        }
+
+        .segmentation-result figcaption {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .live-pill {
@@ -610,7 +646,13 @@
         <p id="uploadFeedback" class="upload-feedback" role="status" aria-live="polite">
             No file selected.
         </p>
-        <div id="mediaPreview"></div>
+        <div class="preview-grid">
+            <div id="mediaPreview"></div>
+            <figure id="segmentationResult" class="segmentation-result" hidden>
+                <img id="segmentationImage" alt="AI segmentation mask overlay on a sampled frame">
+                <figcaption id="segmentationCaption"></figcaption>
+            </figure>
+        </div>
         <p class="section-note">
             Experimental flood monitoring prototype. Visual image area is not water depth,
             and reflective streets can produce false alarms.
@@ -1125,6 +1167,31 @@
         );
     }
 
+    function clearSegmentationPreview() {
+        el("segmentationResult").hidden = true;
+        el("segmentationImage").removeAttribute("src");
+        el("segmentationCaption").textContent = "";
+    }
+
+    function showSegmentationPreview(visualization, kind) {
+        if (!visualization
+            || typeof visualization.image_data_url !== "string"
+            || !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(visualization.image_data_url)) {
+            clearSegmentationPreview();
+            return;
+        }
+
+        el("segmentationImage").src = visualization.image_data_url;
+        const time = Number(visualization.time_seconds);
+        const sample = kind === "video" && Number.isFinite(time)
+            ? "Sampled frame at " + time.toFixed(1) + "s (largest predicted area). "
+            : "Uploaded image. ";
+        el("segmentationCaption").textContent = sample
+            + "Cyan indicates model-predicted flood regions, not verified water or water depth. "
+            + "Preview is not saved to S3.";
+        el("segmentationResult").hidden = false;
+    }
+
     function previewSelectedFile() {
         const file = el("mediaFile").files[0];
         const container = el("mediaPreview");
@@ -1134,6 +1201,7 @@
             currentPreviewUrl = null;
         }
         container.replaceChildren();
+        clearSegmentationPreview();
 
         if (!file) {
             setText("uploadFeedback", "No file selected.");
@@ -1178,6 +1246,7 @@
 
         const button = el("runButton");
         const message = el("uploadFeedback");
+        clearSegmentationPreview();
         button.disabled = true;
         button.textContent = "Analyzing...";
         message.classList.remove("error");
@@ -1193,7 +1262,7 @@
         payload.append("file", corrected, file.name);
 
         try {
-            const response = await fetch("/analyze/" + kind, {
+            const response = await fetch("/analyze/" + kind + "?include_visualization=true", {
                 method: "POST",
                 body: payload
             });
@@ -1205,8 +1274,10 @@
                 throw new Error(detail);
             }
 
+            // Keep the heavy base64 preview out of session analysis history.
+            const { visualization, ...analysisMetadata } = data;
             const record = {
-                ...data,
+                ...analysisMetadata,
                 _kind: kind,
                 _session_at: new Date().toISOString()
             };
@@ -1214,6 +1285,7 @@
             sessionAnalyses.unshift(record);
             activeAnalysis = record;
             renderAll();
+            showSegmentationPreview(visualization, kind);
 
             const temporalStatus = kind === "video" && data.temporal
                 ? data.temporal.status
