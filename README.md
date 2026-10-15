@@ -585,6 +585,8 @@ When running an AGPL-covered modified application as a network service, provide 
 - Training/evaluation images and videos, dataset metadata, and content originating from others are **not relicensed by this repository**. Check applicable usage, attribution and distribution permissions before sharing these materials.
 - Trained weights are currently excluded from Git; redistribution of the official checkpoint is pending a separate rights and attribution review.
 
+See [Model and dataset provenance audit](docs/data_provenance_and_model_release.md) for the dataset-builder counts, attribution sources, official checkpoint SHA-256, and the unresolved licensing items that must be checked before releasing weights.
+
 The project's experimental status and model limitations are documented above. This open-source license does not constitute a certification for emergency response, privacy compliance or operational safety.
 
 ---
