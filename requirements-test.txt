@@ -1,0 +1,8 @@
+# Model-free API/decoder regression suite; no AWS calls or checkpoint needed.
+fastapi==0.142.2
+httpx==0.28.1
+python-multipart==0.0.32
+numpy==2.5.3
+opencv-python-headless==5.0.0.93
+boto3==1.43.108
+Pillow==12.3.0

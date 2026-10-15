@@ -100,3 +100,19 @@ This supports **local reproducibility of inference and the UI with an authorized
 - `/risk/latest` relies on an optional local JSON file and may return 404; the dashboard and `/analyze/image`, `/analyze/video` are the relevant clean-clone smoke test endpoints.
 - Without S3 configuration, analysis history is only retained during the current browser session and isn't persisted.
 - This is a **smoke test**, not a formal independent-model evaluation or a production security review.
+
+
+## Judge-demo review update — 2026-10-15
+
+The separate security review branch adds guarded uploads, admission limits, HTTPS-required configuration, non-root container execution, and ephemeral judge sessions (S3 and shared history disabled). The official checkpoint, inference parameters and frozen evaluation remain unchanged. See [review evidence](judge_security_review_2026-10-15.md), [access/cost/shutdown plan](judge_access_plan.md), and [video script](video_script_en.md). Local model-free tests are not real-model or cloud validation. No HTTPS endpoint has been deployed during this review; earlier local/AWS passes do not validate the new branch. Weight distribution remains restricted pending rights review.
+
+### Test the reviewed security branch before merging
+
+The earlier `main` smoke test above is historical. To validate this review, use `security/judge-demo-final-review-2026-10-15` as the clone branch (or the exact approved commit), then repeat checkpoint verification and Docker testing. Never assume the old main result validates this branch. Run the model-free tests first:
+
+```sh
+python -m pip install -r requirements-test.txt
+python -m unittest discover -s tests -v
+```
+
+For a local authenticated smoke test, inject a newly generated test password from a private environment file outside the checkout; bind Docker only to `127.0.0.1`. Do not set HTTPS-required mode for this loopback HTTP-only test. The final external deployment must set both require-auth and require-HTTPS, use trusted TLS termination, and pass the separate external validation checklist. Never publish the environment file or reuse the local test password for judges.
