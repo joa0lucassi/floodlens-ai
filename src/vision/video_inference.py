@@ -23,6 +23,7 @@ class VideoFloodAnalyzer:
         video_path: str | Path,
         sample_interval_seconds: float = SAMPLE_INTERVAL_SECONDS,
         include_visualization: bool = False,
+        max_duration_seconds: float | None = None,
     ):
         if (
             not math.isfinite(sample_interval_seconds)
@@ -51,6 +52,14 @@ class VideoFloodAnalyzer:
             )
 
         duration_seconds = total_frames / fps
+        if (
+            max_duration_seconds is not None
+            and duration_seconds > max_duration_seconds
+        ):
+            video.release()
+            raise ValueError(
+                f"Video exceeds {max_duration_seconds:g} seconds."
+            )
 
         window = deque(maxlen=TEMPORAL_WINDOW)
         records = []
