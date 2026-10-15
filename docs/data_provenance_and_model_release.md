@@ -65,7 +65,11 @@ The resource landing page explicitly states: **Creative Commons Attribution (CC 
 
 On 2026-10-05, the project developer manually supplied **21 negative images** (seven in each of three categories) to `data/negative_training/images`. The images were normalized to filenames `floodlens_negative_001.jpg` through `floodlens_negative_021.jpg`, paired with empty YOLO segmentation labels, copied into `data/negative_training/prepared/` and packaged as `data/negative_training/negative_training.zip`.
 
-The project developer's 2026-10-15 local inspection confirmed 21 images in `images/`, 21 in `prepared/images/`, 21 annotation files in `prepared/labels/`, and the archive `negative_training.zip`. No CSV, JSON, Markdown, README, license, or attribution manifest was found in the local dataset tree. The original conversations did not record exact source URLs, authors, or individual image licenses.
+The project developer's 2026-10-15 local inspection confirmed 21 images in `images/`, 21 in `prepared/images/`, 21 annotation files in `prepared/labels/`, and the archive `negative_training.zip`. No CSV, JSON, Markdown, README, license, or attribution manifest was found in the local dataset tree. The developer subsequently recalled (2026-10-15) that the original 21 images were downloaded from **Pinterest or Pexels**, but cannot yet identify which individual image came from which service. Exact source URLs, creators, download method, and per-file permissions remain **unverified**.
+
+**Licensing distinction:** Pinterest is a sharing/discovery platform, not an automatic license grant for each pinned photo; the rights owner's authorization is needed when applicable (https://help.pinterest.com/pt-br/article/copyright). Pexels generally allows free personal/commercial uses under its content license, but its Terms prohibit unauthorized automated scraping/data collection including for machine learning and bulk copying. Its ML FAQ specifically forbids using its API to assemble ML datasets without permission (https://www.pexels.com/terms-of-service/; https://help.pexels.com/hc/en-us/articles/900005880463-What-are-the-Terms-and-Conditions). The effect of these terms on any manually downloaded individual image and model-weights distribution must be assessed based on actual source and acquisition method; do **not** label all 21 images as freely licensed for ML training.
+
+The original conversations did not record exact source URLs, authors, or individual image licenses.
 
 The MultiDomain builder repeats **each of these 21 images three times** to form 63 training records. Repeats are **not** independent or distinct images. The archive creation date and the renamed filenames do **not** establish the original photographs' authorship, usage permissions, or license.
 
@@ -80,7 +84,7 @@ The 108 hard-negative BDD100K images were used to train the **experimental V3 ca
 - [x] Identify original HydroShare resource for the three ZIP files and confirm its **CC BY 4.0 resource-level** statement.
 - [ ] Add complete HydroShare/Wang and original dataset-author credits to project-facing documentation; investigate third-party rights where relevant.
 - [x] Reconcile the 21-file local negative-training archive with the documented original workflow; confirmed that no per-image source manifest was created.
-- [ ] Establish the original authorship, source URLs and permitted uses of those 21 images before marking their rights cleared.
+- [ ] Recover a source URL and original rights holder for each of the 21 negative images, distinguish Pinterest vs Pexels and how it was downloaded, and review permissions for ML training and weights distribution before marking rights cleared.
 - [ ] Resolve any conditions restricting training, derivative use, model distribution, attribution, and competition use.
 - [ ] Record complete dataset/source author attributions in the report and README.
 - [ ] Validate the official `best.pt` SHA-256 matches this document prior to any upload.
