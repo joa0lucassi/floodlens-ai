@@ -1,16 +1,20 @@
 # FloodLens AI — Technical Report (Submission Draft)
 
-**Project:** FloodLens AI — Experimental Visual Monitoring of Urban Flooding  
-**Competition:** OpenCV AI Competition 2026, powered by AWS  
-**Author:** Joao Lucas, Computer Science, Federal University of Cariri (UFCA)  
-**Status:** Draft prepared for final submission. Technical and legal checks listed at the end must be completed before submission.  
+**Project:** FloodLens AI — Experimental Visual Monitoring of Urban Flooding
+
+**Competition:** OpenCV AI Competition 2026, powered by AWS
+
+**Author:** Joao Lucas, Computer Science, Federal University of Cariri (UFCA)
+
+**Status:** Final editorial candidate, 2026-10-18; awaiting owner approval and release checks. Not submitted. Availability and AWS origin are unverified in this review.
+
 **Repository:** https://github.com/joa0lucassi/floodlens-ai
 
 ## 1. Abstract
 
-FloodLens AI is a research prototype for identifying visually flooded regions in urban road scenes using real-world images and videos. It combines OpenCV 5 for frame acquisition and image-mask processing, YOLO11 instance segmentation, a temporal confirmation mechanism, an experimental heuristic risk score, and a FastAPI interface. The prototype is packaged with Docker and has been demonstrated on AWS ECS with analysis storage in S3.
+FloodLens AI is a research prototype for identifying visually flooded regions in urban road scenes using real-world images and videos. It combines OpenCV 5 for frame acquisition and image-mask processing, YOLO11 instance segmentation, a temporal confirmation mechanism, an experimental heuristic risk score, and a FastAPI interface. The prototype is packaged with Docker. An earlier AWS ECS/Fargate test used optional S3 storage. The final judge-access design connects a Vercel landing page through Tailscale Funnel HTTPS to the AWS-hosted API; the authenticated review configuration disables S3 and shared server history.
 
-On a frozen, independent 20-video evaluation set (10 flooded and 10 non-flooded videos), the evaluated pipeline identified all 10 flooded videos but also produced 5 false alerts in the negative group. Its video-level recall was 100%, precision 66.67%, specificity 50%, and F1 score 80%. These exploratory results show high sensitivity on that small sample and a clear remaining limitation: wet roads, rain and nighttime reflections can resemble actual flooding.
+On a frozen, independent 20-video evaluation set (10 flooded and 10 non-flooded videos), the evaluated pipeline identified all 10 flooded videos but also produced 5 false alerts in the negative group. Its video-level accuracy was 75%, recall 100%, precision 66.67%, specificity 50%, and F1 score 80%. These exploratory results show high sensitivity on that small sample and a clear remaining limitation: wet roads, rain and nighttime reflections can resemble actual flooding.
 
 This system is **not an operational emergency alert service**. It does not measure physical water depth or provide calibrated probabilities of danger.
 
@@ -22,35 +26,26 @@ Potential future users include municipal monitoring teams, researchers, road ope
 
 ## 3. System Architecture
 
-The figure below reflects the implementation and validated cloud components. Cloud history is optional; the dashboard also operates in local mode without AWS credentials.
+The final judge-access design is **Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API**. The landing page navigates the browser to the demo; video uploads do not pass through Vercel. The planned AWS task hosts Tailscale beside the API. This design must be reconciled with actual deployed evidence before it is labeled operational.
 
-~~~mermaid
-flowchart TD
-    A[Uploaded image or video] --> B[FastAPI upload endpoint]
-    B --> C[OpenCV 5 image decoding or video capture]
-    C --> D[YOLO11 segmentation at 960 px]
-    D --> E[Visual flood mask and area estimate]
-    E --> F{Video?}
-    F -->|No| G[Single-image flood candidate]
-    F -->|Yes| H[Sample 1 frame per second]
-    H --> I[Sliding 5-sample window]
-    I --> J[At least 3 positives in a complete window]
-    J --> K[Confirmed / not confirmed / insufficient data]
-    K --> L[Experimental risk heuristic and temporal timeline]
-    G --> M[FastAPI JSON response]
-    L --> M
-    M --> N[Browser dashboard]
-    M --> O{S3 enabled?}
-    O -->|Yes| P[Store uploaded media and analysis JSON in Amazon S3]
-    O -->|No| Q[Browser-session display only]
-    R[Docker image] --> S[Amazon ECR]
-    S --> T[Amazon ECS / Fargate]
-    T --> B
-~~~
+```mermaid
+flowchart TB
+    Landing["Vercel landing page"] --> Funnel["Tailscale Funnel HTTPS"]
+    subgraph AWS["AWS ECS / Fargate: final design"]
+      Sidecar["Tailscale sidecar"] --> API["Authenticated FloodLens API"]
+      API --> Decode["OpenCV 5: decode and sample"]
+      Decode --> Model["YOLO11n-seg: 0.25 / 960"]
+      Model --> Mask["OpenCV masks and image-area measurement"]
+      Mask --> Decision["Image candidate or temporal video verdict"]
+      Decision --> API
+    end
+    Funnel --> Sidecar
+    ECR["Amazon ECR"] -.-> API
+```
 
-**Implementation reference:** `src/api/main.py`, `src/vision/inference.py`, `src/vision/video_inference.py`, `src/risk/risk_engine.py`, `src/storage/s3_storage.py`, `src/web/index.html`.
+The authenticated review configuration disables S3 persistence and shared history/risk endpoints. Browser-session metadata remains available. S3 is part of a separate optional mode and historical AWS validation. The [full architecture](submission_architecture.md) maps evidence and implementation. For video, the dashboard preview is one representative sampled frame, not a fully annotated video.
 
-A separate, judge-facing diagram showing both local and AWS runtime and the on-demand visualization path is available in [`docs/submission_architecture.md`](submission_architecture.md). The dashboard displays the source media next to a cyan prediction overlay; for video, the visualization is one selected sampled frame and does not alter the temporal decision.
+On 2026-10-18, the landing page returned HTTP 200 and the demo returned HTTP 502 from the review environment. This check does not identify the failure cause or establish whether the hostname currently reaches AWS or a local runtime. No infrastructure change or authenticated inference was performed.
 
 ## 4. Substantive OpenCV 5 Usage
 
@@ -127,13 +122,15 @@ The deployment was validated using a Docker image with CPU-based inference, Amaz
 
 On 2026-10-13, the AWS deployment reached an ECS stable state, returned a healthy `/health` response with the model loaded and S3 enabled, then processed a development flood video. The AWS response included 7 samples, 3 confirmed windows, first temporal confirmation at 4 seconds, risk MODERATE, and `storage.saved=true`. The task service was subsequently scaled down and observed at Desired=0, Running=0, Pending=0.
 
-This is an end-to-end **functional smoke test**, not evidence of production uptime, latency guarantees, scale or safety. The AWS service is intentionally not left running between tests to limit compute charges.
+This is an end-to-end **functional smoke test**, not evidence of production uptime, latency guarantees, scale or safety. The historical test service was stopped afterward to limit compute charges; current task state was not inspected in this review.
 
 See `docs/aws_end_to_end_validation_2026-10-13.md` for the verified cloud test details.
 
 ## 9. Reproducibility
 
-**Requirements:** Python compatible with the pinned runtime, OpenCV 5, Ultralytics, PyTorch CPU, FastAPI and Docker. The exact production dependencies are pinned in `requirements-prod.txt` and the CPU PyTorch installation is pinned in `Dockerfile`.
+**Reviewed source:** PR #4, commit `24ea9a86cf300c1f268ccc82ef0b98d9f15a8f77`; main does not include its demo safeguards. Reproduce this commit for application verification. No application code changes are part of this proposal.
+
+**Requirements:** Python compatible with the pinned runtime, OpenCV 5, Ultralytics, PyTorch CPU, FastAPI and Docker. Direct production Python dependencies are pinned in `requirements-prod.txt`, including OpenCV 5.0.0.93; CPU PyTorch is pinned in `Dockerfile`. The Python base image tag, apt packages, transitive dependencies and Chart.js CDN are not fully locked. Current files are not a complete immutable dependency lock.
 
 The trained model weight file is not versioned on GitHub. To reproduce inference, an authorized copy of the official MultiDomain checkpoint must be placed at:
 
@@ -158,7 +155,7 @@ Docker:
 
 **Local clean-clone verification (2026-10-15): PASS.** The developer cloned the public `main` into a fresh temporary directory, separately copied the official `best.pt`, verified its SHA-256 with `scripts/verify_official_model.py`, built the Docker image, and launched the app on localhost port 8002. The returned health status was `healthy`, `model_loaded=true`, `s3_enabled=false`, version `0.7.0`. The developer subsequently confirmed successful completion of a real video analysis in the new instance. Detailed fresh-run metrics were not captured, and this test was not another independent evaluation. See `docs/clean_clone_smoke_test.md`.
 
-Judge-accessible availability of both code **and required model weights** must be arranged; this public repository alone is not a complete executable artifact without the checkpoint.
+A source-only clone cannot execute inference without the separately held official checkpoint. Controlled judge execution can avoid publishing weights, but does not resolve training-data/model permissions. Document the authorized reproduction or execution route explicitly; public weight release is not asserted as a competition requirement.
 
 ## 10. Responsible Use and Security Limitations
 
@@ -166,6 +163,7 @@ Judge-accessible availability of both code **and required model weights** must b
 - The sample of independent videos is too small to generalize performance to all cities or cameras.
 - Flooded image area is not physical depth. The risk label is an uncalibrated heuristic.
 - Camera streams can contain identifiable people, vehicles or license plates; rights, minimization, privacy and retention policies are required for real operation.
+- The reviewed implementation has no hard mechanism to terminate a stuck native decoder/inference call; its 180-second video budget is cooperative. This remains a deployment limitation.
 - The current prototype should not be publicly exposed as a general-purpose, unauthenticated media-upload service without authentication, file size limits, rate limiting and hardened operational controls.
 - Published competition materials must not expose AWS credentials, account identifiers, public task IPs or sensitive S3 information.
 - The official model weights and any submitted media must have their distribution rights and attribution checked.
@@ -174,23 +172,11 @@ Judge-accessible availability of both code **and required model weights** must b
 
 A future version may improve difficult negative discrimination through larger diverse training material, model verification and new independent evaluation. Another proposed direction is **FloodLens Hybrid**, combining fixed-camera visual extent, calibrated physical water-level sensors, and weather signals. These capabilities are proposals, **not** features claimed to be implemented.
 
-## 12. Competition Submission Checklist — Open Items
+## 12. Release and Submission Status
 
-**Competition deadline:** October 26, 2026. The public Devpost banner displays 11:45 p.m. PDT, while the competition page body states 11:59 p.m. Pacific. Submit **before the earlier displayed time** and confirm the deadline in the account's submission form.
+The written material is prepared for owner approval. The final video and screenshots, event-specific form verification, rights review, judge availability and final AWS origin evidence remain open. See [release checklist](submission_final_checklist.md), [official requirements](competition_requirements_2026-10-18.md), [Devpost copy](submission_devpost_draft.md) and [screenshot plan](submission_screenshots_checklist.md).
 
-**Rights reminder:** Official contest rules require authorization for all materials actually submitted and grant organizers a broad license over those submitted materials. Do not include any unlicensed third-party training photos, unchecked sample videos, original datasets, or confidential credentials in the report, screenshots, demo video or uploads. A reference to privately held weights does not itself constitute submission of those weights.
-
-**Judge-facing written draft:** [Devpost copy](submission_devpost_draft.md). **Architecture diagram:** [submission architecture](submission_architecture.md).
-
-- [ ] Validate third-party dataset, model, code and video rights and required attribution.
-- [ ] Arrange authorized judge access to the required official model checkpoint.
-- [ ] Deliver a judge-accessible live endpoint **or** coordinate a live screen-share demonstration. ECS is currently shut down when not in use.
-- [ ] Produce a public/unlisted judge-accessible demonstration video (maximum 5 minutes) with team identification, working system, architecture, real results, and limitations.
-- [x] Prepare the first complete English Devpost project narrative and source-linked architecture diagram.
-- [ ] Export and review final report and architecture graphic for readability.
-- [x] Check the competition deadline shown publicly (noting the 11:45 vs 11:59 p.m. PDT discrepancy).
-- [ ] Confirm cutoff inside the authenticated submission form and submit before the earlier published time.
-- [x] Verify the implemented FloodLens dashboard and segmentation preview against the real local API; user-tested on both a flood video and a challenging negative video, and the redesigned dashboard was rechecked after integration.
+Do not publish demo credentials. Do not claim continuous uptime, unrestricted model distribution, calibrated emergency risk or live camera ingestion. Approval of documentation is separate from deployment, merge and submission.
 
 ## Sources in this repository
 
@@ -201,8 +187,3 @@ A future version may improve difficult negative discrimination through larger di
 - `src/evaluation/compare_multidomain_v3.py`
 
 **Competition requirements:** https://opencv26.devpost.com/ (consult the current official rules and submission form).
-
-
-## Judge-demo review update — 2026-10-15
-
-The separate security review branch adds guarded uploads, admission limits, HTTPS-required configuration, non-root container execution, and ephemeral judge sessions (S3 and shared history disabled). The official checkpoint, inference parameters and frozen evaluation remain unchanged. See [review evidence](judge_security_review_2026-10-15.md), [access/cost/shutdown plan](judge_access_plan.md), and [video script](video_script_en.md). Local model-free tests are not real-model or cloud validation. No HTTPS endpoint has been deployed during this review; earlier local/AWS passes do not validate the new branch. Weight distribution remains restricted pending rights review.

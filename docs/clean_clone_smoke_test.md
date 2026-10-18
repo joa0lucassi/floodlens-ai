@@ -104,6 +104,8 @@ This supports **local reproducibility of inference and the UI with an authorized
 
 ## Judge-demo review update — 2026-10-15
 
+Historical review-session record. For the October 18 submission status and assigned public URLs, see [submission review](submission_review_2026-10-18.md). This paragraph does not report current deployment availability.
+
 The separate security review branch adds guarded uploads, admission limits, HTTPS-required configuration, non-root container execution, and ephemeral judge sessions (S3 and shared history disabled). The official checkpoint, inference parameters and frozen evaluation remain unchanged. See [review evidence](judge_security_review_2026-10-15.md), [access/cost/shutdown plan](judge_access_plan.md), and [video script](video_script_en.md). Local model-free tests are not real-model or cloud validation. No HTTPS endpoint has been deployed during this review; earlier local/AWS passes do not validate the new branch. Weight distribution remains restricted pending rights review.
 
 ### Test the reviewed security branch before merging

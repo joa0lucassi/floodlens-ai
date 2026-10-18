@@ -1,40 +1,53 @@
-# Submission release checklist
+# FloodLens AI — Final Submission Checklist
 
-Target supplied by the project owner: **26 October 2026**. Confirm the exact competition deadline/timezone and required judging availability in the current official submission form before submitting. This checklist is not confirmation that the submission or live demonstration is complete.
+Review date: 2026-10-18. Editorial preparation is complete as a proposal; the project is not yet certified ready for submission. No final submission has been made.
 
-## Completed engineering evidence
+## Prepared in this proposal
 
-- [x] Review PR #2 and existing follow-up PR #3; changes remain on a separate branch.
-- [x] Run 21 model-free regression tests, including actual synthetic image/video decoding and temporal processing.
-- [x] Preserve official 960/0.25 inference and 3-of-5 temporal rule.
-- [x] Preserve frozen TP 10 / TN 5 / FP 5 / FN 0; accuracy 75%, precision 66.67%, recall 100%, F1 80%.
-- [x] Prepare English architecture, access/cost/shutdown plan, reproduction notes and video script.
-- [x] Keep weights, secrets and evaluation media out of changes.
+- [x] Inspect PR #4, open/draft at 24ea9a8, and its 22-file change set against main.
+- [x] Revise README, Devpost copy, architecture, technical report, access notes and recording script.
+- [x] Preserve YOLO11n-seg MultiDomain, confidence 0.25, imgsz 960, five samples and three positives.
+- [x] Preserve frozen 20-video TP 10 / TN 5 / FP 5 / FN 0; Accuracy 75%, Precision 66.67%, Recall 100%, Specificity 50%, F1 80%.
+- [x] Prepare the screenshot plan and public-source competition requirements review.
+- [x] Distinguish historical AWS/S3 evidence from authenticated, S3-disabled judge-mode behavior.
+- [x] Keep runtime, checkpoint and holdout unchanged; no training or inference run.
 
-## Required before public demonstration
+## Owner review and publication
 
-- [ ] Review the final commit and complete real-model Python 3.14 Docker smoke tests with owned/licensed development media. Record model hash, commit, memory, latency and observed results.
-- [ ] Validate a hard deadline that stops stuck native decoding/inference, plus edge header/body limits; do not confuse HTTP timeout with process cancellation.
-- [ ] Render the authenticated dashboard in desktop and mobile browsers; check original media, cyan prediction preview, timeline, charts, error messages and session history.
-- [ ] Inspect actual AWS plan, credits, service/task/image, VPC/subnets/SG, ECR privacy, S3 policy and CloudWatch retention.
-- [ ] Agree stable hostname, TLS route, private secret injection and judging access period.
-- [ ] Obtain explicit owner approval for the concrete cost estimate and network/service changes. No Paid Plan upgrade.
-- [ ] Deploy only the approved immutable image; independently test HTTPS/auth, limits, origin isolation and actual inference.
-- [ ] Record daily credit/spend readings and exact shutdown date; keep a reserve. Alerts are not a hard spending cap.
+- [ ] Approve the documentation diff before a GitHub commit/push. Do not merge PR #4.
+- [ ] Publish approved documents on the review branch; use immutable links to that approved commit in final submission material.
+- [ ] Update the landing-page availability copy and document links after owner approval; do not promise uptime until verified.
+- [ ] Decide whether the displayed architecture is actually deployed on AWS; record evidence rather than assuming from the hostname.
 
-## Submission package
+## Access and technical evidence
 
-- [ ] Replace draft access/video placeholders with verified links; credentials only in a private judge field.
-- [ ] Confirm permitted use of every demo image/video; keep source, creator, license and attribution.
-- [ ] Resolve model-use/distribution questions; do not publish `best.pt`.
-- [ ] Record the actual implementation using `video_script_en.md`; include limitations and false positives.
-- [ ] Describe CONFIRMED as the temporal algorithm's output, not physical flood verification or water depth.
-- [ ] Ensure the report, Devpost text and architecture describe the deployed version; retain historical test dates.
-- [ ] Confirm source visibility/license and any reproduction/model-access requirements in competition rules.
-- [ ] Preview and submit the final Devpost form manually or with separate explicit authorization.
+- [ ] Resolve the demo's observed 502 and verify external authentication plus real image/video analysis with authorized development media.
+- [ ] Record the exact deployed source commit, image digest, checkpoint identity and sanitized task/sidecar configuration.
+- [ ] Document stable Tailscale identity across task replacement, private secret injection, network restrictions and HTTPS proxy trust.
+- [ ] Explicitly address the unresolved hard native-inference/decoding deadline; do not claim the cooperative timer cancels stuck work.
+- [ ] Complete production dependency/image locking or clearly document the residual reproducibility limit. Pin the Chart.js CDN through a separately approved code change if selected.
+- [ ] Verify desktop/mobile display and private/session storage behavior on the final deployed version. Historical local tests need not be repeated without a specific deployment difference.
+- [ ] Agree the judging access period, cost authorization and shutdown plan separately; do not start resources in this review.
 
-## After judging
+## Rights and media
 
-- [ ] Stop the existing service after authorization; verify desired/running/pending all zero and no autoscaling restart.
-- [ ] Disable demo routing and revoke demo credentials after approval.
-- [ ] Review residual ECR/S3/log costs and final delayed billing. Delete resources only with separate authorization.
+- [ ] Resolve documented data/model-use questions; the 21 manually collected negative images still lack complete provenance in the current audit.
+- [ ] Choose owned/licensed demonstration media and record permissions and attribution for every published frame.
+- [ ] Record and review the actual video using video_script_en.md; no checkpoint or training-media upload.
+- [ ] Capture the approved screenshot set; no credentials in either login field or any surrounding UI.
+- [ ] Upload the video only with authorization; verify judge-accessible playback and actual duration.
+
+## Devpost handoff
+
+- [ ] Inspect the authenticated event-specific form, including mandatory extra questions, attachment settings and private-field visibility.
+- [ ] Fill actual team identity and provide report, architecture, source, demo and final video links.
+- [ ] Supply credentials only through a verified private judge channel.
+- [ ] Resolve the official deadline discrepancy; plan against the earlier schedule time in competition_requirements_2026-10-18.md.
+- [ ] Preview the final project page for factual consistency, readable media and functioning links.
+- [ ] Owner authorizes and performs final submission separately. Do not submit as part of this task.
+
+## After judging — separate authorization
+
+- [ ] Stop the approved runtime and verify tasks/autoscaling state.
+- [ ] Revoke demo access/routing as agreed and review residual costs.
+- [ ] Retain scientific evidence and licensed submission material; do not delete resources without approval.

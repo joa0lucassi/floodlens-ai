@@ -1,68 +1,40 @@
-# Judge access and deployment plan — 2026-10-15
+# Judge Access and Deployment Evidence
 
-## Actual status
+Updated proposal: 2026-10-18. This document plans access; it neither authorizes infrastructure changes nor establishes current AWS state.
 
-Code review and local model-free tests are implemented in the review branch. No AWS resource was changed or started. The cloud browser returned `Site Unavailable` for the ECS console on the initial attempt and one reload. Consequently cluster, task revision, ECR digest, VPC routes, security groups, S3 policies, CloudWatch, balance, and account-plan eligibility remain **unverified in this session**. Existing resource names and the approximately USD 99.34 balance are owner-provided, not newly observed.
+## Public entry points
 
-The Oct 13 AWS test and earlier developer-reported clean-clone test are historical evidence, not validation of this branch. No production checkpoint, authorized road-media development set, Docker engine, or live AWS credentials were available here. Do not mark public deployment complete.
+- Landing: https://floodlens-ai-vert.vercel.app
+- Demo: https://floodlens-judge.tail1bb8f1.ts.net/
+- Review candidate: https://github.com/joa0lucassi/floodlens-ai/pull/4
 
-## Cost and architecture decision
+The intended final route is Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API. Vercel links the browser to the separate demo origin. Tailscale is intended to run beside the API in the same ECS task. No new ALB, NAT gateway, domain purchase or cluster is assumed by this design.
 
-Reuse the existing ECS service, one Linux/x86 Fargate task, 1 vCPU / 2 GiB, existing ECR, existing public subnet and internet gateway if verified. No new cluster, NAT gateway, load balancer or paid-plan upgrade is authorized.
+## Evidence register
 
-Candidate with the lowest additional infrastructure overhead: a **named outbound tunnel** in the same task, with a stable HTTPS hostname, a local reverse proxy, and the app listening only on loopback. This requires a suitable existing domain/provider account and confirmation of its free-plan terms. Neither has been established. Media and authentication traffic traverse that provider; disclose this before approval. Quick/random tunnels are unsuitable as the submitted stable judge URL. Do not purchase a domain or create an account without approval.
+| Date / source | Observed or reported | Limit |
+| --- | --- | --- |
+| 2026-10-13 repository AWS log | Earlier ECS/Fargate deployment processed a video with S3 enabled; later scaled to zero | Does not validate PR #4 or current Funnel routing |
+| Earlier owner report in this conversation | Local Funnel, external HTTPS and authentication validated | Does not prove that the current hostname terminates at AWS |
+| Earlier owner AWS inspection | Free Plan, credits and zero service tasks reported | Historical account information; not a current cost authorization |
+| 2026-10-18 repository inspection | PR #4 open/draft at 24ea9a8; no checked-in task/sidecar deployment definition | Deployed source/image cannot be inferred from repository alone |
+| 2026-10-18 unauthenticated public GET | Landing HTTP 200; Explore the system points to the demo; demo HTTP 502 from this environment | No authenticated access or inference validated; failure cause unknown |
 
-Alternative: direct TLS proxy plus an existing domain and automated DNS updates after Fargate address changes. This adds certificate-storage/renewal and DNS-update risks. An ALB is a fallback only after a concrete separately approved estimate; it is not required for a single controlled demonstration. A static website alone cannot run the existing Python/YOLO inference.
+## Verification needed before an availability claim
 
-Based on official us-east-1 Linux/x86 example rates retrieved Oct 15:
+1. Record the actual task definition, application commit/image digest, Tailscale placement and the hostname's origin using read-only evidence. If it still forwards to a local machine, describe that accurately and keep AWS as a separately documented historical deployment until migration is verified.
+2. Confirm that the deployed application has PR #4 safeguards, uses the frozen official checkpoint, trusts only the intended local proxy for HTTPS, and does not expose port 8000 generally.
+3. Verify private authentication and an authorized image/video flow from an external network. No credentials belong in source, query strings, public text or recordings. `/health` alone is insufficient.
+4. Verify the public endpoint after task replacement and explain identity/state handling. A hostname setting alone does not establish a persistent Tailscale identity.
+5. Add a sanitized reproducible task/sidecar setup and secret-reference instructions after owner approval. Do not publish secret values or assume that credential-storage services have no cost.
+6. Agree an access window and shutdown plan that supports judging. The service being scaled to zero and the endpoint being always available are incompatible claims.
 
-| Item | Estimate |
-|---|---:|
-| Fargate CPU + 2 GiB | USD 0.04937/hour |
-| One public IPv4 | USD 0.005/hour |
-| Combined baseline | USD 0.05437/hour |
-| 24 hours | USD 1.30 |
-| 7 days | USD 9.13 |
-| 14 days | USD 18.27 |
-| 30 days | USD 39.15 |
+## Privacy and resource limits in the reviewed source
 
-These are **baseline estimates, not a total or spending cap**. Additional charges include ECR storage, CloudWatch ingestion/storage, Secrets Manager or parameter/KMS requests, outbound data, existing S3 objects, and transient overlapping tasks during deployment. A 2-GiB task may need more memory with 960px inference and sidecars: measure first; do not silently resize. The final judging window is unknown, so a total deployment estimate cannot yet be approved responsibly.
+Authenticated mode disables S3 and shared history/risk endpoints. Browser-session history is metadata. Image limits are 8 MiB and 16 million pixels; video limits are 48 MiB, 60 seconds and 2,073,600 pixels per frame. Upload reading has a total 60-second deadline. Video processing checks a 180-second cooperative budget between iterations; it cannot forcibly stop a stuck native decoder or model call. Do not market this as a hard execution limit or complete abuse protection.
 
-Official references:
-- https://aws.amazon.com/fargate/pricing/
-- https://aws.amazon.com/vpc/pricing/
-- https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html
-- https://developers.cloudflare.com/tunnel/
-- https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/
+## Costs and authorization
 
-The AWS Free account plan is documented as not charging until upgrade; it ends after six months or credit exhaustion. Verify the **actual account plan**, current credits and covered services before activation. Never upgrade, join AWS Organizations, or enable another action that automatically upgrades the account. Budget notifications do not impose a hard cap.
+No current price estimate is asserted in this documentation pass. Before any activation, separately verify the account plan, credit eligibility/expiry, total service costs and owner-approved operating window. Consider compute, IPv4, transfer, logs, image storage, secret/state persistence and overlapping deployments. Zero running service tasks does not prove zero residual costs.
 
-## Deployment gates and execution after explicit approval
-
-1. Verify plan, credit expiry, balance, Bills and existing storage/log consumption. Set an approved end timestamp and reserve balance. Record a timestamped baseline privately.
-2. Inspect the existing cluster/service and task revision, actual ECR digest, CPU architecture, execution/task roles, public subnet route to internet gateway, SG inbound/outbound rules, logging retention, S3 public access block/encryption/lifecycle. Do not reproduce private identifiers in public docs.
-3. Obtain an authorized checkpoint privately; verify with `scripts/verify_official_model.py`. Build and test Docker locally, including memory and CPU with permitted development media; never use the final holdout.
-4. Inject `FLOODLENS_DEMO_PASSWORD` through ECS `secrets.valueFrom` referencing Secrets Manager or SSM SecureString, not plaintext task environment. Grant only the execution role read access to that exact secret (and KMS key if required). No AWS keys in the container. Set `FLOODLENS_DEMO_REQUIRE_AUTH=1` and `FLOODLENS_DEMO_REQUIRE_HTTPS=1`.
-5. Use one Uvicorn worker and one ECS task; no autoscaling. The process-local limits are not a distributed rate limiter. S3 is disabled whenever demo authentication is configured, even if a bucket is inherited. Shared history and risk endpoints return 403; browser-session history remains available.
-6. Configure a verified TLS edge and local proxy with bounded upload time, body size and response timeout. Trust forwarded scheme only from the loopback proxy, never `*`. A tunnel must enforce HTTPS at its edge before forwarding. No public inbound 8000. Approve every network change separately. Do not delete existing rules/resources without approval.
-7. Set no access-body/authorization logging, private ECR, non-root app, bounded task memory and ephemeral storage, 7-day operational-log retention if approved. Scrub proxy query strings and credentials. No request media in logs.
-8. Register a new task revision; preserve revision 3 and previous image digest for rollback. Update the existing service only after the agreed cost approval. Record exact image digest and commit privately.
-9. External validation: HTTPS valid certificate; HTTP cannot reach upload; unauthenticated dashboard/API/history denied; authorized PNG and 5–10s development MP4 produce actual inference and cyan preview; temporal timeline works; invalid/oversized media rejected; parallel uploads rejected; no S3 writes; direct origin port blocked. Check from a second network and record date/browser/results. Do not claim this from local TestClient tests.
-10. Deliver HTTPS URL and credentials via the competition's private judge-access field, separately from public project text. Never commit credentials. Record start/end and observed spend daily.
-
-## Residual engineering gates
-
-The 180-second video budget is checked **between** sampled frames; it cannot interrupt a blocked native decoder or a single long model call. Proxy timeouts do not kill inference. Before wider exposure, implement and validate a supervised worker process with a hard deadline (or restrict to vetted judge media and explicitly accept this residual risk). Analysis body reads now have a total 60-second application deadline; retain proxy upload/header limits for connections that have not yet reached the ASGI application. Uvicorn keep-alive timeout is not an upload deadline. Global rate limiting can deny legitimate users during an attack. No penetration test or browser-rendered UI test was completed.
-
-## Shutdown and rollback
-
-After owner authorization, set desired count to zero on the existing service:
-
-```sh
-aws ecs update-service --region us-east-1 --cluster floodlens-cluster --service floodlens-task-service-fw9vt8sp --desired-count 0
-aws ecs describe-services --region us-east-1 --cluster floodlens-cluster --services floodlens-task-service-fw9vt8sp --query 'services[0].{desired:desiredCount,running:runningCount,pending:pendingCount}'
-```
-
-Verify all three counts are zero and the demo URL no longer serves inference. Scaling to zero alone is not guaranteed if autoscaling remains configured; inspect it first. Revoke demo/tunnel credentials and disable the route after approval. Keep ECR, S3 and logs unless deletion is separately authorized; those resources can still consume credits. Record final Billing figures after billing-data delay. Rollback to the prior task definition does not authorize making its unprotected API public.
-
-If account/network access or stable HTTPS prerequisites cannot be resolved: retain service at zero and prepare a permitted recorded walkthrough plus source and report. This has no hosting spend but is **not equivalent to an interactive demo**; confirm competition acceptance before relying on it.
+This task does not register a new revision, change desired count, create secrets/storage, deploy to Vercel or run inference. Any paid infrastructure action requires separate explicit authorization.
