@@ -1,14 +1,20 @@
 # FloodLens AI
 
-> Computer vision system for experimental urban flood monitoring using OpenCV, YOLO segmentation, temporal analysis, FastAPI, Docker, and AWS.
+> Research prototype for potential urban flooding in uploaded images and prerecorded videos, using OpenCV 5, YOLO11 segmentation, temporal analysis, and AWS.
 
 ## Overview
 
 FloodLens AI is an experimental computer vision project designed to identify urban flooding from images and videos.
 
-The project uses a YOLO11 segmentation model to detect visually flooded regions, OpenCV for video processing, temporal analysis to reduce isolated false detections, a heuristic risk engine, and a FastAPI backend that can be deployed using Docker and AWS infrastructure.
+The project uses the official YOLO11n-seg MultiDomain model to predict potential flood regions, OpenCV 5 for media processing, a temporal rule that can reject isolated detections, an experimental heuristic risk engine, and a FastAPI backend packaged with Docker. It accepts uploaded images and prerecorded videos; live camera ingestion is not implemented.
 
-The project is currently under active development and is being evaluated for the OpenCV AI Competition 2026.
+Prepared for the OpenCV AI Competition 2026. This repository is not evidence that a final submission has been sent.
+
+- [Project landing page](https://floodlens-ai-vert.vercel.app)
+- [Authenticated judge demo](https://floodlens-judge.tail1bb8f1.ts.net/) — use the **Explore the system** button on the landing page. Credentials are supplied privately.
+- [Review candidate: PR #4](https://github.com/joa0lucassi/floodlens-ai/pull/4), currently a draft; it has not been merged into `main`.
+
+**Judge-route status:** the complete Vercel → Tailscale Funnel → AWS ECS/Fargate → FloodLens API flow was validated end-to-end on 2026-10-17, including external HTTPS, Basic Auth and real model inference. The ECS service was then intentionally scaled to Desired=0, Running=0, Pending=0 to stop continuous Fargate task usage. A later HTTP 502 while the backend is stopped is therefore expected and does not invalidate the earlier successful validation. The route must be reactivated and rechecked before the judge window. See [judge access and deployment evidence](docs/judge_access_plan.md).
 
 > **Important:** FloodLens AI is an experimental system and is not intended for operational emergency decision-making in its current stage.
 
@@ -38,44 +44,16 @@ FloodLens AI explores how computer vision can help automatically detect and moni
 
 The latest evaluated video pipeline works as follows:
 
-```text
-VIDEO
-  |
-  v
-Sample 1 full frame every second
-  |
-  v
-YOLO11-seg
-Inference size: 960
-Confidence threshold: 0.25
-  |
-  v
-Raw result for each sample
-FLOOD or DRY
-  |
-  v
-Temporal consistency
-Sliding window of 5 samples
-  |
-  v
-At least 3 of 5 are positive?
-  |
-  +---- YES ---> Flood confirmed
-  |
-  +---- NO ----> Not confirmed
-```
+| Stage | Frozen behavior |
+| --- | --- |
+| Input | Prerecorded video, decoded by OpenCV 5 |
+| Sampling | Approximately one full frame per second |
+| Segmentation | YOLO11n-seg MultiDomain; confidence 0.25; imgsz 960 |
+| Temporal rule | Sliding window of 5 samples; at least 3 positives in a complete window |
+| Video verdict | `CONFIRMED` if any complete window meets the rule; otherwise `NOT_CONFIRMED` |
+| Short input | `INSUFFICIENT_DATA` when fewer than 5 usable samples are available |
 
-The temporal window is sliding rather than divided into independent groups.
-
-Example:
-
-```text
-0s  1s  2s  3s  4s
-    1s  2s  3s  4s  5s
-        2s  3s  4s  5s  6s
-```
-
-A video is classified as `FLOOD` if at least one temporal window confirms flooding.
+Overlapping windows advance by one sample. A single image produces a visual candidate, not a temporal verdict. `CONFIRMED` means the algorithmic rule was satisfied; it is not physical verification of flooding.
 
 ---
 
@@ -234,43 +212,26 @@ They are intended for research and prototype development.
 
 ## System Architecture
 
-```text
-Camera / Video
-      |
-      v
-OpenCV
-      |
-      v
-YOLO11-seg
-      |
-      v
-Flood segmentation
-      |
-      v
-Temporal / Risk Analysis
-      |
-      v
-FastAPI
-      |
-      +-------------------+
-      |                   |
-      v                   v
-Dashboard              AWS S3
-                          |
-                          v
-                  Analysis history
+**Judge journey:** Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API.
 
-Containerization
-      |
-      v
-Docker
-      |
-      v
-AWS ECR
-      |
-      v
-AWS ECS / Fargate
+Vercel serves the project overview and links the browser to the demo. Uploads go directly to the demo origin; Vercel does not execute YOLO or proxy video uploads. In the validated judge deployment, Tailscale and the authenticated API run in the same ECS/Fargate task. HTTPS, Basic Auth, private SSM secret injection and real model inference were exercised successfully on 2026-10-17. Public inbound TCP 8000 was removed while Funnel continued to provide access.
+
+```mermaid
+flowchart TB
+  Landing["Vercel landing page"] -->|"Explore the system: browser navigation"| Funnel["Tailscale Funnel HTTPS"]
+  subgraph AWS["AWS ECS / Fargate: judge runtime"]
+    Tunnel["Tailscale sidecar"] -->|"Local HTTP forwarding"| API["FloodLens API: authentication and uploads"]
+    API --> CV["OpenCV 5 and YOLO11n-seg"]
+    CV --> Decision["Temporal analysis and result JSON"]
+    Decision --> API
+  end
+  Funnel --> Tunnel
+  ECR["Amazon ECR: application image"] -.-> API
 ```
+
+In PR #4's authenticated demo mode, S3 persistence and shared server history/risk endpoints are disabled; browser-session metadata remains available. S3 belongs to an optional research mode and the historical October 13 AWS test. See [architecture and evidence](docs/submission_architecture.md).
+
+The current Tailscale state directory is ephemeral. A full ECS task replacement can therefore require node cleanup or hostname correction before the published judge URL is relied upon again.
 
 ---
 
@@ -293,7 +254,9 @@ AWS ECS / Fargate
 
 - AWS ECR
 - AWS ECS / Fargate
-- AWS S3
+- Amazon S3 (optional research mode; disabled in authenticated judge mode)
+- Vercel (landing page)
+- Tailscale Funnel (HTTPS entry point)
 
 ### Infrastructure
 
@@ -321,7 +284,7 @@ Current API version:
 0.7.0
 ```
 
-The root endpoint serves the FloodLens dashboard.
+The root endpoint serves the FloodLens dashboard. With demo authentication configured, the dashboard and analysis endpoints require authentication; `/health` remains available for checks, and the shared `/risk/latest` and `/analyses/history` endpoints return 403.
 
 ---
 
@@ -342,7 +305,7 @@ Confirmation: >= 3 positive samples per complete window
 
 Video responses include temporal confirmation status, a time-indexed timeline, and an experimental heuristic risk assessment. Videos with fewer than five usable samples return an insufficient-data status rather than a definitive negative. The heuristic risk score is not a calibrated probability or a measured water depth.
 
-The updated image and video APIs were tested locally and in Docker, then deployed and successfully tested on AWS ECS with S3 persistence on 2026-10-13.
+The updated image and video APIs were tested locally and in Docker, then deployed and successfully tested on AWS ECS with S3 persistence on 2026-10-13. The authenticated PR #4 judge runtime was separately validated end-to-end on AWS with Tailscale Funnel, Basic Auth and real inference on 2026-10-17.
 
 The separate V3 hard-negative fine-tuning experiment did not show an improvement on the 20-image development regression set; the original MultiDomain remains the official model. The frozen Final Holdout V2 was not rerun for these integrations. See [AWS end-to-end validation](docs/aws_end_to_end_validation_2026-10-13.md).
 
@@ -407,17 +370,20 @@ These documents are **preparation drafts**, not confirmation that the project ha
 - [Clean-clone reproducibility smoke test](docs/clean_clone_smoke_test.md)
 - [Dataset/model provenance and rights review](docs/data_provenance_and_model_release.md)
 
-**Pending before final submission:** judge-accessible execution or an arranged live demo, authorized model access, the demonstration video (five minutes maximum), verified media rights, and submission-form completion. AWS ECS was intentionally scaled to zero after validation.
+**Pending before final submission:** reactivate and revalidate the judge runtime for the approved access window; finish the video and screenshots; resolve media/model permissions; and check the authenticated submission form. See [release checklist](docs/submission_final_checklist.md), [screenshots](docs/submission_screenshots_checklist.md), and [official requirements review](docs/competition_requirements_2026-10-18.md).
 
 ---
 
 ## Running Locally
 
+The commands below reproduce the reviewed application runtime. Documentation-only commits after `24ea9a8` do not change application code. Docker is the production runtime reference. Direct production Python dependencies are pinned, but the Docker base tag, apt packages, transitive dependencies and dashboard Chart.js CDN are not fully locked. This is not a bit-for-bit reproducible build.
+
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/joa0lucassi/floodlens-ai.git
+git clone --branch security/judge-demo-final-review-2026-10-15 https://github.com/joa0lucassi/floodlens-ai.git
 cd floodlens-ai
+git checkout --detach 24ea9a86cf300c1f268ccc82ef0b98d9f15a8f77
 ```
 
 ### 2. Create a virtual environment
@@ -465,7 +431,7 @@ for the weights are still under review.
 ### 5. Start the API
 
 ```bash
-python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 ```
 
 The dashboard will be available locally on port:
@@ -487,31 +453,20 @@ docker build -t floodlens-api .
 Run locally:
 
 ```bash
-docker run --rm -p 8000:8000 floodlens-api
+docker run --rm -p 127.0.0.1:8000:8000 floodlens-api
 ```
 
 ---
 
 ## AWS Deployment
 
-The containerized API was deployed and functionally validated on Amazon ECS on 2026-10-13. An uploaded development video was processed with the 960px + 3/5 temporal pipeline, and the resulting analysis was saved to Amazon S3. After testing, the ECS service was scaled to zero tasks; ongoing storage/logging costs may still apply.
+The October 13, 2026 ECS/Fargate smoke test processed a real development video and saved results to S3. It predates PR #4's authenticated, S3-disabled mode and remains useful historical evidence for the optional storage path.
 
-```text
-Docker image
-     |
-     v
-AWS ECR
-     |
-     v
-AWS ECS / Fargate
-     |
-     v
-FloodLens API
-     |
-     +---- AWS S3
-```
+The authenticated judge deployment was separately validated on 2026-10-17. Task definition `floodlens-task:5` ran the FloodLens application and a Tailscale sidecar in the same Fargate task. The application image was pinned to ECR digest `sha256:74eba2477e09342edb873ba4f5e879df05e9399dc33267834598d70e17d72fa2`. Judge and Tailscale credentials were injected through SSM SecureString references. Tailscale Funnel provided HTTPS to the local API, Basic Auth was verified from an external/incognito session, and real model inference completed successfully. The application trusted only the local proxy through `FORWARDED_ALLOW_IPS=127.0.0.1`, and general inbound TCP 8000 was removed from the security group while Funnel continued to work.
 
-S3 integration stores uploaded media and analysis results when cloud storage is enabled. For the observed cloud test and cleanup procedure, see [AWS end-to-end validation](docs/aws_end_to_end_validation_2026-10-13.md). This smoke test does not establish production reliability or operational emergency suitability.
+After validation, the ECS service was intentionally scaled to Desired=0, Running=0, Pending=0 to stop continuous task usage. The demo is therefore not expected to stay online while the service is stopped. Before judging, reactivate the service with owner authorization, confirm the Tailscale hostname/identity, repeat one external authenticated inference, and verify TCP 8000 remains non-public.
+
+See [judge access and deployment evidence](docs/judge_access_plan.md), [submission architecture](docs/submission_architecture.md), and [historical AWS validation](docs/aws_end_to_end_validation_2026-10-13.md).
 
 ---
 
@@ -626,7 +581,7 @@ The project's experimental status and model limitations are documented above. Th
 
 **Joao Lucas**
 
-Computer Science student  
+Computer Science student
 Federal University of Cariri — UFCA
 
 GitHub: [joa0lucassi](https://github.com/joa0lucassi)
@@ -635,16 +590,10 @@ GitHub: [joa0lucassi](https://github.com/joa0lucassi)
 
 ## Current Status
 
-```text
-Research prototype; 960px + temporal 3/5 API integrated
-Docker, ECS and S3 end-to-end smoke test completed on 2026-10-13
-ECS scaled back to zero service tasks after testing
-
-Independent Final Holdout V2 (20 videos):
-Recall:       100.00%
-F1-score:      80.00%
-Specificity:   50.00%
-
-Main open problem:
-persistent false positives in difficult negative scenes
-```
+- Research prototype with the frozen 0.25 / 960 / 3-of-5 pipeline.
+- Historical real-model Docker/AWS validation plus an authenticated AWS/Tailscale judge-route validation on 2026-10-17.
+- Vercel landing page and final judge URL configured; ECS is intentionally scaled to zero until the next approved availability window.
+- Independent 20-video holdout: Accuracy 75%, Precision 66.67%, Recall 100%, Specificity 50%, F1 80%.
+- Main scientific limitation: persistent false positives in difficult negative scenes.
+- Main deployment limitations: no hard cancellation for a stuck native call and ephemeral Tailscale identity across full task replacement.
+- Submission text and recording plan prepared; final submission has not been sent.
