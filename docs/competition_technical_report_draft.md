@@ -6,13 +6,13 @@
 
 **Author:** Joao Lucas, Computer Science, Federal University of Cariri (UFCA)
 
-**Status:** Final editorial candidate, 2026-10-18; awaiting owner approval and release checks. Not submitted. Availability and AWS origin are unverified in this review.
+**Status:** Final editorial candidate, 2026-10-18; not submitted. The authenticated AWS/Tailscale judge route was validated end-to-end on 2026-10-17 and then intentionally scaled to zero. Final judge-window reactivation, media, rights, and submission-form checks remain open.
 
 **Repository:** https://github.com/joa0lucassi/floodlens-ai
 
 ## 1. Abstract
 
-FloodLens AI is a research prototype for identifying visually flooded regions in urban road scenes using real-world images and videos. It combines OpenCV 5 for frame acquisition and image-mask processing, YOLO11 instance segmentation, a temporal confirmation mechanism, an experimental heuristic risk score, and a FastAPI interface. The prototype is packaged with Docker. An earlier AWS ECS/Fargate test used optional S3 storage. The final judge-access design connects a Vercel landing page through Tailscale Funnel HTTPS to the AWS-hosted API; the authenticated review configuration disables S3 and shared server history.
+FloodLens AI is a research prototype for identifying visually flooded regions in urban road scenes using real-world images and videos. It combines OpenCV 5 for frame acquisition and image-mask processing, YOLO11 instance segmentation, a temporal confirmation mechanism, an experimental heuristic risk score, and a FastAPI interface. The prototype is packaged with Docker. An earlier AWS ECS/Fargate test used optional S3 storage. The final judge-access architecture connects a Vercel landing page through Tailscale Funnel HTTPS to the AWS-hosted API; the authenticated judge configuration disables S3 and shared server history.
 
 On a frozen, independent 20-video evaluation set (10 flooded and 10 non-flooded videos), the evaluated pipeline identified all 10 flooded videos but also produced 5 false alerts in the negative group. Its video-level accuracy was 75%, recall 100%, precision 66.67%, specificity 50%, and F1 score 80%. These exploratory results show high sensitivity on that small sample and a clear remaining limitation: wet roads, rain and nighttime reflections can resemble actual flooding.
 
@@ -26,12 +26,12 @@ Potential future users include municipal monitoring teams, researchers, road ope
 
 ## 3. System Architecture
 
-The final judge-access design is **Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API**. The landing page navigates the browser to the demo; video uploads do not pass through Vercel. The planned AWS task hosts Tailscale beside the API. This design must be reconciled with actual deployed evidence before it is labeled operational.
+The validated judge-access architecture is **Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API**. The landing page navigates the browser to the demo; video uploads do not pass through Vercel. Tailscale runs beside the API in the same ECS task.
 
 ```mermaid
 flowchart TB
     Landing["Vercel landing page"] --> Funnel["Tailscale Funnel HTTPS"]
-    subgraph AWS["AWS ECS / Fargate: final design"]
+    subgraph AWS["AWS ECS / Fargate: judge runtime"]
       Sidecar["Tailscale sidecar"] --> API["Authenticated FloodLens API"]
       API --> Decode["OpenCV 5: decode and sample"]
       Decode --> Model["YOLO11n-seg: 0.25 / 960"]
@@ -43,9 +43,11 @@ flowchart TB
     ECR["Amazon ECR"] -.-> API
 ```
 
-The authenticated review configuration disables S3 persistence and shared history/risk endpoints. Browser-session metadata remains available. S3 is part of a separate optional mode and historical AWS validation. The [full architecture](submission_architecture.md) maps evidence and implementation. For video, the dashboard preview is one representative sampled frame, not a fully annotated video.
+The authenticated judge configuration disables S3 persistence and shared history/risk endpoints. Browser-session metadata remains available. S3 is part of a separate optional mode and historical AWS validation. The [full architecture](submission_architecture.md) maps deployment evidence and implementation. For video, the dashboard preview is one representative sampled frame, not a fully annotated video.
 
-On 2026-10-18, the landing page returned HTTP 200 and the demo returned HTTP 502 from the review environment. This check does not identify the failure cause or establish whether the hostname currently reaches AWS or a local runtime. No infrastructure change or authenticated inference was performed.
+On 2026-10-17 the complete judge route was exercised successfully with Tailscale Funnel HTTPS, Basic Auth and real model inference against the AWS-hosted application. The application image was pinned in task definition `floodlens-task:5`; judge and Tailscale credentials were injected from AWS SSM SecureString parameters; `FORWARDED_ALLOW_IPS=127.0.0.1` restricted proxy trust to the local sidecar; and public inbound TCP 8000 was removed while Funnel continued to work.
+
+After validation, the ECS service was intentionally scaled to Desired=0, Running=0, Pending=0 to stop continuous Fargate task usage. Therefore a later automated HTTP 502 while the backend is stopped does not negate the successful deployment validation. The route must be rechecked after reactivation before the judge window.
 
 ## 4. Substantive OpenCV 5 Usage
 
@@ -113,22 +115,26 @@ The frozen holdout was not used for post-evaluation threshold selection, and it 
 
 The application exposes:
 - `GET /` — browser dashboard;
-- `GET /health` — health and S3 availability;
-- `GET /risk/latest` — locally generated, separate risk-assessment artifact (not automatically updated by each upload);
-- `GET /analyses/history` — S3-backed history, available only when enabled;
+- `GET /health` — health endpoint;
+- `GET /risk/latest` — shared risk artifact when that mode is enabled;
+- `GET /analyses/history` — S3-backed history when storage mode is enabled;
 - `POST /analyze/image` and `POST /analyze/video` — analysis endpoints.
 
-The deployment was validated using a Docker image with CPU-based inference, Amazon ECR for image distribution, ECS/Fargate for running the service, and S3 for optional media and analysis JSON storage.
+In authenticated judge mode, S3 is disabled and shared history/risk endpoints are denied. The AWS delivery uses Amazon ECR for image distribution and ECS/Fargate for the CPU inference service.
 
-On 2026-10-13, the AWS deployment reached an ECS stable state, returned a healthy `/health` response with the model loaded and S3 enabled, then processed a development flood video. The AWS response included 7 samples, 3 confirmed windows, first temporal confirmation at 4 seconds, risk MODERATE, and `storage.saved=true`. The task service was subsequently scaled down and observed at Desired=0, Running=0, Pending=0.
+On 2026-10-13, an earlier AWS deployment reached a stable ECS state, returned a healthy `/health` response with the model loaded and S3 enabled, then processed a development flood video. The response included 7 samples, 3 confirmed windows, first temporal confirmation at 4 seconds, risk MODERATE, and `storage.saved=true`. This was the historical optional-storage smoke test.
 
-This is an end-to-end **functional smoke test**, not evidence of production uptime, latency guarantees, scale or safety. The historical test service was stopped afterward to limit compute charges; current task state was not inspected in this review.
+On 2026-10-17, the authenticated PR #4 runtime was validated in a separate judge configuration. Task definition `floodlens-task:5` ran the FloodLens application and Tailscale sidecar together. The application image was pinned to ECR digest `sha256:74eba2477e09342edb873ba4f5e879df05e9399dc33267834598d70e17d72fa2`. SSM SecureString references supplied private credentials. External HTTPS, Basic Auth, the browser flow and real model inference were validated. The security group no longer exposed TCP 8000 inbound, and the sidecar continued to provide the HTTPS route.
 
-See `docs/aws_end_to_end_validation_2026-10-13.md` for the verified cloud test details.
+After this validation the ECS service was deliberately returned to Desired=0, Running=0, Pending=0. This is a cost-control state, not a claim that the judge URL is permanently available. Before judging, the service must be reactivated for the approved window and the short external smoke test repeated.
+
+These checks are end-to-end **functional validation**, not evidence of production uptime, latency guarantees, scale or safety.
+
+See `docs/judge_access_plan.md`, `docs/submission_architecture.md`, and `docs/aws_end_to_end_validation_2026-10-13.md`.
 
 ## 9. Reproducibility
 
-**Reviewed source:** PR #4, commit `24ea9a86cf300c1f268ccc82ef0b98d9f15a8f77`; main does not include its demo safeguards. Reproduce this commit for application verification. No application code changes are part of this proposal.
+**Reviewed runtime source:** PR #4 application commit `24ea9a86cf300c1f268ccc82ef0b98d9f15a8f77`; the later documentation commits do not change runtime code. Main does not include the PR #4 demo safeguards unless separately merged.
 
 **Requirements:** Python compatible with the pinned runtime, OpenCV 5, Ultralytics, PyTorch CPU, FastAPI and Docker. Direct production Python dependencies are pinned in `requirements-prod.txt`, including OpenCV 5.0.0.93; CPU PyTorch is pinned in `Dockerfile`. The Python base image tag, apt packages, transitive dependencies and Chart.js CDN are not fully locked. Current files are not a complete immutable dependency lock.
 
@@ -153,7 +159,7 @@ Docker:
     docker build -t floodlens-api:final .
     docker run --rm -p 127.0.0.1:8001:8000 floodlens-api:final
 
-**Local clean-clone verification (2026-10-15): PASS.** The developer cloned the public `main` into a fresh temporary directory, separately copied the official `best.pt`, verified its SHA-256 with `scripts/verify_official_model.py`, built the Docker image, and launched the app on localhost port 8002. The returned health status was `healthy`, `model_loaded=true`, `s3_enabled=false`, version `0.7.0`. The developer subsequently confirmed successful completion of a real video analysis in the new instance. Detailed fresh-run metrics were not captured, and this test was not another independent evaluation. See `docs/clean_clone_smoke_test.md`.
+**Local clean-clone verification (2026-10-15): PASS.** The developer cloned the public source into a fresh temporary directory, separately copied the official `best.pt`, verified its SHA-256 with `scripts/verify_official_model.py`, built the Docker image, and launched the app on localhost. The returned health status was `healthy`, `model_loaded=true`, `s3_enabled=false`, version `0.7.0`. A real video analysis subsequently completed successfully. Detailed fresh-run metrics were not captured, and this test was not another independent evaluation. See `docs/clean_clone_smoke_test.md`.
 
 A source-only clone cannot execute inference without the separately held official checkpoint. Controlled judge execution can avoid publishing weights, but does not resolve training-data/model permissions. Document the authorized reproduction or execution route explicitly; public weight release is not asserted as a competition requirement.
 
@@ -164,8 +170,9 @@ A source-only clone cannot execute inference without the separately held officia
 - Flooded image area is not physical depth. The risk label is an uncalibrated heuristic.
 - Camera streams can contain identifiable people, vehicles or license plates; rights, minimization, privacy and retention policies are required for real operation.
 - The reviewed implementation has no hard mechanism to terminate a stuck native decoder/inference call; its 180-second video budget is cooperative. This remains a deployment limitation.
-- The current prototype should not be publicly exposed as a general-purpose, unauthenticated media-upload service without authentication, file size limits, rate limiting and hardened operational controls.
-- Published competition materials must not expose AWS credentials, account identifiers, public task IPs or sensitive S3 information.
+- Tailscale state is ephemeral in the current ECS task. A full task replacement can require node cleanup or hostname correction before the published judge URL is reliable again.
+- The current prototype should not be publicly exposed as a general-purpose, unauthenticated media-upload service. Judge access is authenticated and TCP 8000 is not intended as a public entry point.
+- Published competition materials must not expose AWS credentials, secret values, public task IPs or sensitive S3 information.
 - The official model weights and any submitted media must have their distribution rights and attribution checked.
 
 ## 11. Roadmap
@@ -174,15 +181,17 @@ A future version may improve difficult negative discrimination through larger di
 
 ## 12. Release and Submission Status
 
-The written material is prepared for owner approval. The final video and screenshots, event-specific form verification, rights review, judge availability and final AWS origin evidence remain open. See [release checklist](submission_final_checklist.md), [official requirements](competition_requirements_2026-10-18.md), [Devpost copy](submission_devpost_draft.md) and [screenshot plan](submission_screenshots_checklist.md).
+The written material is prepared for final owner review. The core judge architecture has already been functionally validated, but the ECS service is intentionally stopped and must be reactivated/revalidated for the judge window. The final video and screenshots, event-specific form verification, rights review and final submission remain open. See [release checklist](submission_final_checklist.md), [official requirements](competition_requirements_2026-10-18.md), [Devpost copy](submission_devpost_draft.md) and [screenshot plan](submission_screenshots_checklist.md).
 
-Do not publish demo credentials. Do not claim continuous uptime, unrestricted model distribution, calibrated emergency risk or live camera ingestion. Approval of documentation is separate from deployment, merge and submission.
+Do not publish demo credentials. Do not claim continuous uptime, unrestricted model distribution, calibrated emergency risk or live camera ingestion. Approval of documentation is separate from merge and final submission.
 
 ## Sources in this repository
 
 - `README.md`
 - `docs/final_holdout_v2_results.md`
 - `docs/aws_end_to_end_validation_2026-10-13.md`
+- `docs/judge_access_plan.md`
+- `docs/submission_architecture.md`
 - `src/evaluation/final_holdout_v2_evaluator.py`
 - `src/evaluation/compare_multidomain_v3.py`
 

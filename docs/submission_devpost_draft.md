@@ -1,6 +1,6 @@
 # FloodLens AI — Devpost Final Copy Candidate
 
-Editorial revision: 2026-10-18. Prepared for owner approval; not submitted. Copy the public narrative sections below into Devpost. Publishing remains blocked by the release checklist, especially demo availability, actual AWS origin, video URL and rights review.
+Editorial revision: 2026-10-18. Prepared for owner review; not submitted. Copy the public narrative sections below into Devpost. The judge architecture was validated end-to-end on 2026-10-17 and then intentionally scaled down to stop continuous Fargate credit consumption. Final submission still depends on the release checklist, including reactivation/revalidation for the judge window, video URL, screenshots, rights review, and authenticated form checks.
 
 ## Project name
 FloodLens AI
@@ -23,15 +23,17 @@ OpenCV 5 performs substantive media processing: `cv2.imdecode` decodes images, `
 
 The backend uses Python, FastAPI, PyTorch and Ultralytics in a Docker container. The interface shows the original media next to the predicted region. For video, the preview is one representative sampled frame with the largest predicted area, not a fully annotated video.
 
-The judge-access architecture is **Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API**. Vercel provides navigation; uploads go to the demo origin. The final AWS design places Tailscale alongside the API. The authenticated review configuration disables S3 persistence and shared server history; browser-session metadata supports reviewing the current session. This design is documented separately from verified deployment evidence.
+The judge-access architecture is **Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API**. Vercel provides navigation; uploads go to the demo origin. In the validated AWS configuration, Tailscale runs alongside the API in the same ECS task, credentials are injected privately from AWS SSM, and the general internet does not need direct TCP 8000 access. The authenticated review configuration disables S3 persistence and shared server history; browser-session metadata supports reviewing the current session.
+
+This complete route, including HTTPS, Basic Auth and real inference, was exercised successfully on 2026-10-17. The ECS service was then intentionally scaled to zero to limit credit consumption, so current unavailability while stopped should not be described as a deployment failure. The route must be revalidated after reactivation for the judge window.
 
 ## Challenges we ran into
 Wet pavement, reflections and nighttime lighting can produce persistent false positives. Temporal consistency can reject isolated predictions, but a visual mistake repeated across frames can still meet the confirmation rule. A separate hard-negative V3 experiment did not improve aggregate development classification results, so the original MultiDomain model remains official.
 
-Reproducibility also requires more than source code: the checkpoint is held separately, training-data provenance has unresolved items, and demonstration availability must be verified independently of an attractive landing page.
+Reproducibility also requires more than source code: the checkpoint is held separately, training-data provenance has unresolved items, and the final judge runtime must be rechecked after task recreation because Tailscale identity state is ephemeral.
 
 ## Accomplishments that we're proud of
-We integrated media upload, segmentation, temporal analysis and visual explanations in one prototype. We documented an AWS ECS/Fargate functional smoke test on October 13, 2026, including optional S3 storage. That earlier storage-enabled test is distinct from the authenticated judge configuration. We also evaluated the frozen pipeline on an independent 20-video holdout and reported the errors rather than only successful examples.
+We integrated media upload, segmentation, temporal analysis and visual explanations in one prototype. We documented an AWS ECS/Fargate functional smoke test on October 13, 2026, including optional S3 storage. We later validated the authenticated judge route end-to-end on October 17 with Tailscale Funnel HTTPS, Basic Auth, private SSM secret injection, restricted network exposure, and real model inference on AWS. We also evaluated the frozen pipeline on an independent 20-video holdout and reported the errors rather than only successful examples.
 
 ## Evaluation and principal results
 The frozen Final Holdout V2 contains 20 prerecorded videos: 10 flooded and 10 non-flooded. The confusion matrix is **TP 10, TN 5, FP 5, FN 0**.
@@ -63,10 +65,12 @@ OpenCV 5, Python, Ultralytics YOLO11n-seg, PyTorch, NumPy, FastAPI, Docker, Amaz
 - Historical evaluation: https://github.com/joa0lucassi/floodlens-ai/blob/security/judge-demo-final-review-2026-10-15/docs/final_holdout_v2_results.md
 
 ## Operator notes — do not paste into the public narrative
-- This is a copy candidate, not a claim that the live demo is ready. On 2026-10-18, the landing returned 200 and the demo returned 502 from the review environment. Resolve and verify the AWS route before publishing the final architecture as deployed fact.
+- The full judge route was successfully validated on 2026-10-17, then the ECS service was intentionally scaled to Desired=0, Running=0, Pending=0. Before judging, reactivate it with owner authorization and repeat the short external smoke test.
+- Check the Tailscale node name after any full ECS task replacement. Ephemeral sidecar state can cause a hostname suffix/collision; correct it before relying on the published judge URL.
 - Video URL: pending recording and owner-authorized hosting. Use the actual final URL, never a placeholder.
-- Attach/link the approved technical report and architecture. This proposal is not on the remote branch yet; existing remote documents are older versions. After owner-approved commit, use immutable links to that new commit without merging PR #4.
+- Attach/link the approved technical report and architecture using immutable links to the final documentation commit.
 - Verify the actual team identity, category and event-specific fields in the authenticated form. Overall awards fit the implementation; COOL and Agentic Vision eligibility is not claimed.
 - Provide demo credentials only through a confirmed private judge channel. Do not place either login value in public text, URLs, screenshots, source or video.
 - The checkpoint is not public. Judge execution can be offered through the controlled demo; that does not resolve underlying data/model permission questions or make a source-only clone executable.
+- The native OpenCV/model path still lacks hard cancellation if a native call becomes stuck; do not present the cooperative video budget as a hard timeout.
 - See [release checklist](submission_final_checklist.md), [technical report](competition_technical_report_draft.md), [architecture](submission_architecture.md), and [rights audit](data_provenance_and_model_release.md).

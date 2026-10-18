@@ -14,7 +14,7 @@ Prepared for the OpenCV AI Competition 2026. This repository is not evidence tha
 - [Authenticated judge demo](https://floodlens-judge.tail1bb8f1.ts.net/) — use the **Explore the system** button on the landing page. Credentials are supplied privately.
 - [Review candidate: PR #4](https://github.com/joa0lucassi/floodlens-ai/pull/4), currently a draft; it has not been merged into `main`.
 
-**Availability checked 2026-10-18:** the landing page returned HTTP 200; the demo returned HTTP 502 from the review environment. This does not establish the cause or the AWS task state. Live inference and the final AWS route still require verification before submission. The landing page also retains an outdated availability message. See [submission audit](docs/submission_review_2026-10-18.md).
+**Judge-route status:** the complete Vercel → Tailscale Funnel → AWS ECS/Fargate → FloodLens API flow was validated end-to-end on 2026-10-17, including external HTTPS, Basic Auth and real model inference. The ECS service was then intentionally scaled to Desired=0, Running=0, Pending=0 to stop continuous Fargate task usage. A later HTTP 502 while the backend is stopped is therefore expected and does not invalidate the earlier successful validation. The route must be reactivated and rechecked before the judge window. See [judge access and deployment evidence](docs/judge_access_plan.md).
 
 > **Important:** FloodLens AI is an experimental system and is not intended for operational emergency decision-making in its current stage.
 
@@ -214,12 +214,12 @@ They are intended for research and prototype development.
 
 **Judge journey:** Vercel landing page → Tailscale Funnel HTTPS → AWS ECS/Fargate → FloodLens API.
 
-Vercel serves the project overview and links the browser to the demo. Uploads go directly to the demo origin; Vercel does not execute YOLO or proxy video uploads. The intended final AWS route hosts the API and a Tailscale sidecar in the same task. This topology is the owner's requested final architecture; the deployed sidecar/task configuration was not independently verified in this review.
+Vercel serves the project overview and links the browser to the demo. Uploads go directly to the demo origin; Vercel does not execute YOLO or proxy video uploads. In the validated judge deployment, Tailscale and the authenticated API run in the same ECS/Fargate task. HTTPS, Basic Auth, private SSM secret injection and real model inference were exercised successfully on 2026-10-17. Public inbound TCP 8000 was removed while Funnel continued to provide access.
 
 ```mermaid
 flowchart TB
   Landing["Vercel landing page"] -->|"Explore the system: browser navigation"| Funnel["Tailscale Funnel HTTPS"]
-  subgraph AWS["AWS ECS / Fargate: intended judge runtime"]
+  subgraph AWS["AWS ECS / Fargate: judge runtime"]
     Tunnel["Tailscale sidecar"] -->|"Local HTTP forwarding"| API["FloodLens API: authentication and uploads"]
     API --> CV["OpenCV 5 and YOLO11n-seg"]
     CV --> Decision["Temporal analysis and result JSON"]
@@ -230,6 +230,8 @@ flowchart TB
 ```
 
 In PR #4's authenticated demo mode, S3 persistence and shared server history/risk endpoints are disabled; browser-session metadata remains available. S3 belongs to an optional research mode and the historical October 13 AWS test. See [architecture and evidence](docs/submission_architecture.md).
+
+The current Tailscale state directory is ephemeral. A full ECS task replacement can therefore require node cleanup or hostname correction before the published judge URL is relied upon again.
 
 ---
 
@@ -303,7 +305,7 @@ Confirmation: >= 3 positive samples per complete window
 
 Video responses include temporal confirmation status, a time-indexed timeline, and an experimental heuristic risk assessment. Videos with fewer than five usable samples return an insufficient-data status rather than a definitive negative. The heuristic risk score is not a calibrated probability or a measured water depth.
 
-The updated image and video APIs were tested locally and in Docker, then deployed and successfully tested on AWS ECS with S3 persistence on 2026-10-13.
+The updated image and video APIs were tested locally and in Docker, then deployed and successfully tested on AWS ECS with S3 persistence on 2026-10-13. The authenticated PR #4 judge runtime was separately validated end-to-end on AWS with Tailscale Funnel, Basic Auth and real inference on 2026-10-17.
 
 The separate V3 hard-negative fine-tuning experiment did not show an improvement on the 20-image development regression set; the original MultiDomain remains the official model. The frozen Final Holdout V2 was not rerun for these integrations. See [AWS end-to-end validation](docs/aws_end_to_end_validation_2026-10-13.md).
 
@@ -368,13 +370,13 @@ These documents are **preparation drafts**, not confirmation that the project ha
 - [Clean-clone reproducibility smoke test](docs/clean_clone_smoke_test.md)
 - [Dataset/model provenance and rights review](docs/data_provenance_and_model_release.md)
 
-**Pending before final submission:** confirm judge-accessible execution and the deployed source/image; finish the video and screenshots; resolve media/model permissions; and check the authenticated submission form. See [release checklist](docs/submission_final_checklist.md), [screenshots](docs/submission_screenshots_checklist.md), and [official requirements review](docs/competition_requirements_2026-10-18.md).
+**Pending before final submission:** reactivate and revalidate the judge runtime for the approved access window; finish the video and screenshots; resolve media/model permissions; and check the authenticated submission form. See [release checklist](docs/submission_final_checklist.md), [screenshots](docs/submission_screenshots_checklist.md), and [official requirements review](docs/competition_requirements_2026-10-18.md).
 
 ---
 
 ## Running Locally
 
-The commands below reproduce the reviewed application commit; the proposed documentation update does not change runtime code. Docker is the production runtime reference. Direct production Python dependencies are pinned, but the Docker base tag, apt packages, transitive dependencies and dashboard Chart.js CDN are not fully locked. This is not a bit-for-bit reproducible build.
+The commands below reproduce the reviewed application runtime. Documentation-only commits after `24ea9a8` do not change application code. Docker is the production runtime reference. Direct production Python dependencies are pinned, but the Docker base tag, apt packages, transitive dependencies and dashboard Chart.js CDN are not fully locked. This is not a bit-for-bit reproducible build.
 
 ### 1. Clone the repository
 
@@ -458,11 +460,13 @@ docker run --rm -p 127.0.0.1:8000:8000 floodlens-api
 
 ## AWS Deployment
 
-The October 13, 2026 ECS/Fargate smoke test processed a real development video and saved results to S3. It predates PR #4's authenticated, S3-disabled mode. The service was scaled to zero after that test; this is a historical observation, not a live status monitor.
+The October 13, 2026 ECS/Fargate smoke test processed a real development video and saved results to S3. It predates PR #4's authenticated, S3-disabled mode and remains useful historical evidence for the optional storage path.
 
-The final deployment design adds Tailscale Funnel HTTPS in front of the authenticated API and links it from Vercel. A checked-in ECS task definition, sidecar configuration, deployed image digest and restart/identity evidence are still missing. The public hostname alone cannot prove the origin is AWS. Keep TCP 8000 isolated from general internet access.
+The authenticated judge deployment was separately validated on 2026-10-17. Task definition `floodlens-task:5` ran the FloodLens application and a Tailscale sidecar in the same Fargate task. The application image was pinned to ECR digest `sha256:74eba2477e09342edb873ba4f5e879df05e9399dc33267834598d70e17d72fa2`. Judge and Tailscale credentials were injected through SSM SecureString references. Tailscale Funnel provided HTTPS to the local API, Basic Auth was verified from an external/incognito session, and real model inference completed successfully. The application trusted only the local proxy through `FORWARDED_ALLOW_IPS=127.0.0.1`, and general inbound TCP 8000 was removed from the security group while Funnel continued to work.
 
-See [judge access and deployment evidence](docs/judge_access_plan.md) and [historical AWS validation](docs/aws_end_to_end_validation_2026-10-13.md). Starting or changing paid infrastructure requires separate owner authorization. No AWS operation is part of this documentation proposal.
+After validation, the ECS service was intentionally scaled to Desired=0, Running=0, Pending=0 to stop continuous task usage. The demo is therefore not expected to stay online while the service is stopped. Before judging, reactivate the service with owner authorization, confirm the Tailscale hostname/identity, repeat one external authenticated inference, and verify TCP 8000 remains non-public.
+
+See [judge access and deployment evidence](docs/judge_access_plan.md), [submission architecture](docs/submission_architecture.md), and [historical AWS validation](docs/aws_end_to_end_validation_2026-10-13.md).
 
 ---
 
@@ -587,8 +591,9 @@ GitHub: [joa0lucassi](https://github.com/joa0lucassi)
 ## Current Status
 
 - Research prototype with the frozen 0.25 / 960 / 3-of-5 pipeline.
-- Historical real-model Docker and AWS functional tests; PR #4 adds authenticated-demo safeguards.
-- Landing page and judge URL assigned; current demo availability and AWS origin remain release checks.
+- Historical real-model Docker/AWS validation plus an authenticated AWS/Tailscale judge-route validation on 2026-10-17.
+- Vercel landing page and final judge URL configured; ECS is intentionally scaled to zero until the next approved availability window.
 - Independent 20-video holdout: Accuracy 75%, Precision 66.67%, Recall 100%, Specificity 50%, F1 80%.
 - Main scientific limitation: persistent false positives in difficult negative scenes.
-- Submission text and recording plan prepared for review; final submission has not been sent.
+- Main deployment limitations: no hard cancellation for a stuck native call and ephemeral Tailscale identity across full task replacement.
+- Submission text and recording plan prepared; final submission has not been sent.
