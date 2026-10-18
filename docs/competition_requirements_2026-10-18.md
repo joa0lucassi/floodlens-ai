@@ -12,14 +12,16 @@ Public [competition requirements](https://opencv26.devpost.com/): substantive Op
 
 | Deliverable | FloodLens assessment / remaining work |
 | --- | --- |
-| OpenCV 5 | Pinned direct dependency and concrete decoding/mask code found; verify actual deployed runtime |
-| AWS | Historical October 13 test documented; final Funnel-to-ECS route not established by this review |
-| Report and diagram | Revised proposal included; approve and link the exact published version |
-| Source and instructions | PR #4 readable; main lacks its safeguards; weights excluded and sidecar deployment instructions incomplete |
-| Dependency reproducibility | Direct packages pinned, but base image, apt, transitive packages and Chart.js are not fully locked |
-| Judge access | Landing 200, demo 502 from review environment; authenticate and test after availability is restored |
-| Video | Complete 4:40 recording script; actual recording and hosting URL pending |
-| Evaluation | Frozen 20-video confusion matrix and all five metrics preserved |
+| OpenCV 5 | Pinned direct dependency and concrete decoding/mask code found; the authenticated judge deployment completed real inference on AWS on 2026-10-17. Recheck after final reactivation before judging. |
+| AWS | Historical October 13 storage-enabled test documented; the final Vercel → Tailscale Funnel → ECS/Fargate → FloodLens API judge route was validated end-to-end on 2026-10-17, then intentionally scaled to zero. |
+| Report and diagram | Revised report and architecture are published on PR #4's review branch; use an immutable link to the approved final commit in submission material. |
+| Source and instructions | PR #4 is readable and contains the authenticated-demo safeguards; `main` does not yet include them. The deployed task/sidecar evidence is documented, but a sanitized checked-in task definition is not required to claim that the validated deployment occurred. |
+| Dependency reproducibility | Direct packages are pinned, but base image, apt, transitive packages and Chart.js are not fully locked; this residual limitation is documented. |
+| Judge access | External HTTPS, Basic Auth and real inference were validated on 2026-10-17. The service is intentionally at Desired=0 after testing; reactivate and repeat one external authenticated inference before the judge window. |
+| Video | Complete recording script prepared; actual recording and hosting URL pending. |
+| Evaluation | Frozen 20-video confusion matrix and all five metrics preserved. |
+
+The 2026-10-17 deployment validation used ECS task definition `floodlens-task:5`, an application image pinned to ECR digest `sha256:74eba2477e09342edb873ba4f5e879df05e9399dc33267834598d70e17d72fa2`, Tailscale Funnel HTTPS, Basic Auth, SSM SecureString secret references, `FORWARDED_ALLOW_IPS=127.0.0.1`, and no general public inbound TCP 8000. The service was subsequently observed at Desired=0, Running=0, Pending=0 to stop continuous Fargate task usage. See [judge access and deployment evidence](judge_access_plan.md).
 
 ## Devpost fields
 
@@ -30,13 +32,13 @@ The [official Devpost form documentation](https://help.devpost.com/article/145-h
 | Name | FloodLens AI |
 | Tagline / description / technologies | Copy from submission_devpost_draft.md |
 | Team / representative | Confirm actual participants and eligibility in account; do not invent teammates |
-| Try-it link | Landing page, then authenticated demo; fix availability first |
-| Repository | Provide reviewed branch or approved immutable commit; do not imply PR was merged |
-| Report / diagram | Use approved files or reachable immutable URLs according to actual form |
-| Video | Insert real hosted video URL after recording |
-| Gallery | Follow screenshot checklist; number/size requirements not verified |
-| Private judge information | Confirm visibility before entering credentials; do not assume a public field is private |
-| Additional questions / terms | Owner reviews actual form and accepts terms personally when ready; no submission in this task |
+| Try-it link | Landing page followed by the authenticated judge demo. Reactivate and revalidate ECS before the judge-access window. |
+| Repository | Provide the reviewed branch or an approved immutable commit; do not imply PR #4 was merged while it remains draft/unmerged. |
+| Report / diagram | Use the approved files or reachable immutable URLs according to the actual form. |
+| Video | Insert the real hosted video URL after recording. |
+| Gallery | Follow the screenshot checklist; number/size requirements remain unverified until the authenticated form can be inspected. |
+| Private judge information | Confirm visibility before entering credentials; do not assume a public field is private. |
+| Additional questions / terms | Owner reviews the actual form and accepts terms personally when ready; no submission has been performed. |
 
 ## Rules and divergences
 
@@ -44,4 +46,4 @@ The [official rules](https://opencv26.devpost.com/rules) require appropriate rig
 
 Overall awards do not require COOL or an agentic system. FloodLens should not claim those optional paths without the corresponding implemented evidence. The overview age summary and detailed rules differ; confirm team eligibility through the official form rather than inferring from either summary alone.
 
-The current material's practical divergences are recorded in [submission audit](submission_review_2026-10-18.md): stale availability language, incomplete access/deployment evidence, absent video, unresolved rights, misleading main-branch links, missing specificity in the old video script, and incomplete dependency locking.
+The earlier documentation review contained stale statements that the final AWS/Tailscale route had not been validated. Those statements were reconciled after the successful 2026-10-17 deployment session. The remaining practical submission items are: record and host the final video; capture approved screenshots; complete rights/media review; inspect the authenticated Devpost form and verify any private credential field; reactivate and revalidate the judge route for the judging window; account for ephemeral Tailscale identity after full task replacement; and keep the unresolved lack of hard cancellation for a stuck native decoder/model call documented.
