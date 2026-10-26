@@ -5,6 +5,8 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.api.demo_security import private_demo_enabled
+
 import boto3
 from botocore.exceptions import (
     BotoCoreError,
@@ -22,6 +24,10 @@ class S3Storage:
             "AWS_REGION",
             "us-east-1"
         )
+
+        # Judge uploads are ephemeral; do not expose or append shared history.
+        if private_demo_enabled():
+            self.bucket_name = None
 
         self.enabled = bool(
             self.bucket_name

@@ -15,3 +15,7 @@ rualivreia.zip
 
 *.csv
 *.log
+.env
+.env.*
+*.pem
+*.key
